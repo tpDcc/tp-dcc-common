@@ -1,0 +1,3 @@
+include tp/core/__logging__.ini
+include versioneer.py
+include tp/core/_version.py
