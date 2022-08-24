@@ -5,8 +5,18 @@ Shared common libraries used by tpDcc.
 
 Following libraries are available:
 
-- **python**: Collection of Python utilities modules to work with Python and DCCs
-- **python**: Collection of Python utilities modules to work with Python and DCCs
+- **python**: Collection of Python utilities modules to work with Python and DCCs.
+- **qt**: Collection of Python utilities modules to work with PySide/PyQt and DCCs
+- **resources**: Resources used by tpDcc framework. Also contains functionality to load resources for apps.
+- **math**: Library that contains math related classes and functions for Python.
+- **plugin**: Library that contains classes to implement plugin architecture in Python.
+- **composite**: Library that contains classes to implement composite architecture in Python.
+- **nameit**: Library that allows to manage nomenclature using rules and tokens.
+- **datalibrary**: Customizable and easy to use data library.
+- **svg**: Library to handle SVG files in Python.
+- **psd**: Library that contains functions to interact with Photoshop files.
+- **unittests**: Library to manage unit tests in a DCC agnostic way.
+- **nodegraph**: Library to create node graphs in a DCC agnostic way.
 
 .. image:: https://travis-ci.com/tpDcc/tp-dcc-common.svg?branch=master&kill_cache=1
     :target: https://travis-ci.com/tpDcc/tp-dcc-common
