@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt
 from Qt.QtWidgets import QSizePolicy, QFrame, QMenu, QWidgetAction
 
-from tpDcc.libs.qt.widgets import layouts, label, checkbox, sliders, color, icon
+from tp.common.qt.widgets import layouts, label, checkbox, sliders, color, icon
 
 
 class SeparatorLine(QFrame, object):

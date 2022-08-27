@@ -11,10 +11,10 @@ import os
 
 from Qt.QtWidgets import QSizePolicy, QButtonGroup, QFrame
 
-from tpDcc.libs.python import path, python
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.core import mixin, base
-from tpDcc.libs.qt.widgets import layouts, buttons, label
+from tp.common.python import helpers, path
+from tp.common.resources import theme
+from tp.common.qt import mixin, base
+from tp.common.qt.widgets import layouts, buttons, label
 
 
 class Breadcrumb(object):
@@ -78,7 +78,7 @@ class BreadcrumbWidget(base.BaseWidget, object):
             self.main_layout.removeWidget(sep)
             sep.setVisible(False)
             sep.deleteLater()
-        python.clear_list(self._separators)
+        helpers.clear_list(self._separators)
 
         for index, data_dict in enumerate(data_list):
             self.add_item(data_dict, index)

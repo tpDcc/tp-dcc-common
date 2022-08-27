@@ -14,7 +14,7 @@ import subprocess
 from Qt.QtCore import Signal, Property, QSize
 from Qt.QtWidgets import QSizePolicy, QFileDialog
 
-from tpDcc.libs.qt.widgets import buttons
+from tp.common.qt.widgets import buttons
 
 
 def browse_file(self):

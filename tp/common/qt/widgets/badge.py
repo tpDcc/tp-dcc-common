@@ -10,8 +10,8 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt, Property
 from Qt.QtWidgets import QSizePolicy, QPushButton
 
-from tpDcc.libs.qt.core import base, formatters
-from tpDcc.libs.qt.widgets import layouts
+from tp.common.qt import base, formatters
+from tp.common.qt.widgets import layouts
 
 
 class Badge(base.BaseWidget, object):

@@ -10,17 +10,15 @@ from __future__ import print_function, division, absolute_import
 import os
 import sys
 import struct
-import logging
 import inspect
 import contextlib
 
-from tpDcc import dcc
-from tpDcc.libs.python import python
-from tpDcc.libs.resources.core import color
+from tp.core import log, dcc
+from tp.common.python import helpers
+from tp.common.qt import consts
+from tp.common.resources import color
 
-from tpDcc.libs.qt.core import consts
-
-LOGGER = logging.getLogger(consts.LIB_ID)
+LOGGER = log.tpLogger
 
 QT_ERROR_MESSAGE = 'Qt.py is not available and Qt related functionality will not be available!'
 
@@ -144,7 +142,7 @@ def wrapinstance(ptr, base=None):
     if ptr is None:
         return None
 
-    ptr_type = long if python.is_python2() else int
+    ptr_type = long if helpers.is_python2() else int
 
     ptr = ptr_type(ptr)
     if 'shiboken' in globals():
@@ -177,7 +175,7 @@ def unwrapinstance(object):
     Unwraps objects with PySide
     """
 
-    if python.is_python2():
+    if helpers.is_python2():
         return long(shiboken.getCppPointer(object)[0])
     else:
         return int(shiboken.getCppPointer(object)[0])
@@ -491,7 +489,7 @@ def distance_point_to_line(p, v0, v1):
 def qhash(inputstr):
     instr = ""
 
-    if python.is_python2():
+    if helpers.is_python2():
         if isinstance(inputstr, str):
             instr = inputstr
         elif isinstance(inputstr, unicode):
@@ -499,7 +497,7 @@ def qhash(inputstr):
         else:
             return -1
     else:
-        if python.is_string(inputstr):
+        if helpers.is_string(inputstr):
             instr = inputstr
         else:
             return -1
@@ -620,7 +618,7 @@ def get_file(directory, parent=None):
     if directory:
         file_dialog.setDirectory(directory)
     directory = file_dialog.getOpenFileName()
-    directory = python.force_list(directory)
+    directory = helpers.force_list(directory)
     if directory:
         return directory
 
@@ -876,11 +874,11 @@ def change_button_color(
         toggle=False, hover=True, destroy=False,
         ds_width=1):
 
-    text_color = python.to_3_list(text_color)
-    bg_color = python.to_3_list(bg_color)
-    hi_color = python.to_3_list(hi_color)
-    hi_text = python.to_3_list(hi_text)
-    ds_color = python.to_3_list(ds_color)
+    text_color = helpers.to_3_list(text_color)
+    bg_color = helpers.to_3_list(bg_color)
+    hi_color = helpers.to_3_list(hi_color)
+    hi_text = helpers.to_3_list(hi_text)
+    ds_color = helpers.to_3_list(ds_color)
 
     if toggle and button.isChecked():
         bg_color = hi_color
@@ -1205,7 +1203,7 @@ def find_coordinates_inside_screen(x, y, width, height, padding=0):
     if not os.name == 'nt':
         return x, y
 
-    from tpDcc.libs.python import win32
+    from tp.common.python import win32
 
     monitor_adjusted = [
         (x1, y1, x2 - width - padding, y2 - height - padding

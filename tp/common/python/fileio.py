@@ -15,7 +15,6 @@ import stat
 import json
 import shutil
 import filecmp
-import logging
 import getpass
 import datetime
 import traceback
@@ -23,9 +22,10 @@ import subprocess
 from tempfile import mkstemp
 from shutil import move
 
-from tpDcc.libs.python import python
+from tp.core import log
+from tp.common.python import helpers
 
-logger = logging.getLogger('tpDcc-libs-python')
+logger = log.tpLogger
 
 
 class FileManager(object):
@@ -92,7 +92,7 @@ class FileManager(object):
         :return: bool
         """
 
-        from tpDcc.libs.python import path
+        from tp.common.python import path
 
         if not path.is_dir(self.file_path):
             if warning_text is not None:
@@ -108,7 +108,7 @@ class FileManager(object):
         :return: bool
         """
 
-        from tpDcc.libs.python import path
+        from tp.common.python import path
 
         dir_name = path.get_dirname(self.file_path)
 
@@ -126,7 +126,7 @@ class FileManager(object):
         :return: bool
         """
 
-        from tpDcc.libs.python import path
+        from tp.common.python import path
 
         if not path.is_file(self.file_path):
             if warning_text is not None:
@@ -173,7 +173,7 @@ class FileWriter(FileManager, object):
     def __init__(self, file_path):
         super(FileWriter, self).__init__(file_path=file_path)
 
-        from tpDcc.libs.python import osplatform
+        from tp.common.python import osplatform
 
         osplatform.get_permission(file_path)
         self.append = False
@@ -219,7 +219,7 @@ class FileWriter(FileManager, object):
 
         self.write_file()
         try:
-            if python.is_python2():
+            if helpers.is_python2():
                 json.dump(dict_data, self.open_file, indent=4, sort_keys=False)
             else:
                 json.dump(dict(dict_data), self.open_file, indent=4, sort_keys=False)
@@ -231,7 +231,7 @@ class FileWriter(FileManager, object):
         """
         Write the given list of lines to the managed file
         :param lines: list<str>, list of lines to write to the managed file
-        :param last_line_empty: bool, whether or not to add a line after the last line
+        :param last_line_empty: bool, whether to add a line after the last line
         """
 
         self.write_file()
@@ -257,7 +257,7 @@ class FileVersion(object):
 
     def __init__(self, file_path):
 
-        from tpDcc.libs.python import path
+        from tp.common.python import path
 
         self.file_path = file_path
         if file_path:
@@ -297,7 +297,7 @@ class FileVersion(object):
         :return: bool
         """
 
-        from tpDcc.libs.python import path
+        from tp.common.python import path
 
         version_folder = self._get_version_folder()
         if path.is_dir(version_folder):
@@ -309,7 +309,7 @@ class FileVersion(object):
         :return: str
         """
 
-        from tpDcc.libs.python import path
+        from tp.common.python import path
 
         versions = self.get_versions()
         latest_version = versions[-1]
@@ -323,7 +323,7 @@ class FileVersion(object):
         :return: list
         """
 
-        from tpDcc.libs.python import folder, sort
+        from tp.common.python import folder, sort
 
         version_folder = self._get_version_folder()
         files = folder.get_files_and_folders(directory=version_folder)
@@ -366,7 +366,7 @@ class FileVersion(object):
         :return: list<int>, list of version numbers
         """
 
-        from tpDcc.libs.python import folder
+        from tp.common.python import folder
 
         version_folder = self._get_version_folder()
         files = folder.get_files_and_folders(directory=version_folder)
@@ -414,7 +414,7 @@ class FileVersion(object):
         :return: str, new version file name
         """
 
-        from tpDcc.libs.python import folder, path
+        from tp.common.python import folder, path
 
         if not comment:
             comment = '-'
@@ -441,7 +441,7 @@ class FileVersion(object):
         :return: list<str, str>, tuple with comment and user of the given version
         """
 
-        from tpDcc.libs.python import path
+        from tp.common.python import path
 
         file_path = self._get_comment_path()
         if not file_path:
@@ -479,7 +479,7 @@ class FileVersion(object):
         :return: list<str, str, str, str, str, str>, tuple version, comment, user, file_size, modified, file_version
         """
 
-        from tpDcc.libs.python import path
+        from tp.common.python import path
 
         versions = self.get_versions(return_version_numbers_also=True)
         if not versions:
@@ -563,7 +563,7 @@ class FileVersion(object):
         return comment
 
     def _get_version_folder(self):
-        from tpDcc.libs.python import path
+        from tp.common.python import path
 
         if path.is_file(self.file_path):
             dir_name = path.get_dirname(self.file_path)
@@ -574,16 +574,16 @@ class FileVersion(object):
         return version_path
 
     def _get_version_path(self, version_number):
-        from tpDcc.libs.python import path
+        from tp.common.python import path
         return path.join_path(self._get_version_folder(), self._version_name + '.' + str(version_number))
 
     def _get_version_number(self, file_path):
-        from tpDcc.libs.python import name
+        from tp.common.python import name
         version_number = name.get_last_number(input_string=file_path)
         return version_number
 
     def _get_comment_path(self):
-        from tpDcc.libs.python import path
+        from tp.common.python import path
         version_folder = self._get_version_folder()
         file_path = None
         if version_folder:
@@ -592,14 +592,14 @@ class FileVersion(object):
         return file_path
 
     def _create_version_folder(self):
-        from tpDcc.libs.python import folder
+        from tp.common.python import folder
         self._version_folder = folder.create_folder(name=self._version_folder_name, directory=self._path)
 
     def _create_comment_file(self):
         self.comment_file = create_file(filename='comments.txt', directory=self._version_folder)
 
     def _increment_version_file_name(self):
-        from tpDcc.libs.python import path
+        from tp.common.python import path
         version_path = path.join_path(self._version_folder, self._version_name + '.1')
         return path.unique_path_name(directory=version_path)
 
@@ -611,7 +611,7 @@ def open_browser(file_path):
     :return:
     """
 
-    from tpDcc.libs.python import osplatform, path
+    from tp.common.python import osplatform, path
 
     if not path.is_file(file_path) and not path.is_dir(file_path):
         return
@@ -638,7 +638,7 @@ def create_file(filename, directory=None, make_unique=False):
     :return: variant, str || bool, filename with path or False if create file failed
     """
 
-    from tpDcc.libs.python import name, path, osplatform
+    from tp.common.python import name, path, osplatform
 
     if directory is None:
         directory = path.get_dirname(filename)
@@ -672,7 +672,7 @@ def copy_file(file_path, file_path_destination):
     :return: str, the new copied path
     """
 
-    from tpDcc.libs.python import path, osplatform
+    from tp.common.python import path, osplatform
 
     osplatform.get_permission(file_path)
 
@@ -711,7 +711,7 @@ def delete_file(name, directory=None, show_warning=True):
     :return: str, file path that was deleted
     """
 
-    from tpDcc.libs.python import path, osplatform
+    from tp.common.python import path, osplatform
 
     if not directory:
         full_path = name
@@ -744,7 +744,7 @@ def rename_file(name, directory, new_name, new_version=False):
     :return:
     """
 
-    from tpDcc.libs.python import path
+    from tp.common.python import path
 
     full_path = path.join_path(directory, name)
     if not path.is_file(full_path):
@@ -852,7 +852,7 @@ def is_file_in_dir(filename, directory):
     :return: bool
     """
 
-    from tpDcc.libs.python import path
+    from tp.common.python import path
 
     file_path = path.join_path(directory, filename)
     return os.path.isfile(file_path)
@@ -935,7 +935,7 @@ def get_size(file_path, round_value=2):
     :return: int
     """
 
-    from tpDcc.libs.python import folder, path
+    from tp.common.python import folder, path
 
     size = 0
     if path.is_dir(file_path):
@@ -1054,7 +1054,7 @@ def write_lines(file_path, lines, append=False):
     :param append: bool, Whether to append the text or replace it
     """
 
-    from tpDcc.libs.python import python, osplatform
+    from tp.common.python import helpers, osplatform
 
     permission = osplatform.get_permission(file_path)
     if not permission:
@@ -1062,7 +1062,7 @@ def write_lines(file_path, lines, append=False):
 
     write_string = 'a' if append else 'w'
 
-    lines = python.force_list(lines)
+    lines = helpers.force_list(lines)
     text = '\n'.join(map(str, lines))
     if append:
         text = '\n' + text

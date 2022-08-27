@@ -10,9 +10,9 @@ from __future__ import print_function, division, absolute_import
 import os
 import re
 
-from tpDcc.managers import resources
-from tpDcc.libs.python import color, python
-from tpDcc.libs.resources.core import utils
+from tp.core.managers import resources
+from tp.common.python import helpers, color
+from tp.common.resources import utils
 
 
 class StyleSheet(object):
@@ -104,7 +104,7 @@ class StyleSheet(object):
 
         if options:
             keys = options.keys()
-            if python.is_python2():
+            if utils.is_python2():
                 keys.sort(key=len, reverse=True)
             else:
                 keys = sorted(keys, key=len, reverse=True)

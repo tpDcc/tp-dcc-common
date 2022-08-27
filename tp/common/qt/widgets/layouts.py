@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt, QPoint, QRect, QSize
 from Qt.QtWidgets import QLayout, QHBoxLayout, QVBoxLayout, QGridLayout, QFormLayout, QWidget, QWidgetItem
 
-from tpDcc.libs.qt.core import consts, qtutils
+from tp.common.qt import consts, qtutils
 
 
 class HorizontalLayout(QHBoxLayout, object):

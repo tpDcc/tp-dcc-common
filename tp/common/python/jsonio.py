@@ -10,10 +10,11 @@ from __future__ import print_function, division, absolute_import
 
 import os
 import json
-import logging
 from collections import OrderedDict
 
-logger = logging.getLogger('tpDcc-libs-python')
+from tp.core import log
+
+logger = log.tpLogger
 
 
 def write_to_file(data, filename, **kwargs):

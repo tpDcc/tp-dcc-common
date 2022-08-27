@@ -7,17 +7,15 @@ Collapsible accordion widget similar to Maya Attribute Editor
 
 from __future__ import print_function, division, absolute_import
 
-import logging
-
 from Qt.QtCore import Qt, Signal, QPoint, QRect, QMimeData, QEvent
 from Qt.QtWidgets import QApplication, QWidget, QGroupBox, QScrollArea
 from Qt.QtGui import QCursor, QColor, QPixmap, QPalette, QPen, QBrush, QPainter, QDrag, QPolygon, QPainterPath
 
-from tpDcc import dcc
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.widgets import layouts
+from tp.core import log, dcc
+from tp.common.resources import theme
+from tp.common.qt.widgets import layouts
 
-LOGGER = logging.getLogger('tpDcc-libs-qt')
+logger = log.tpLogger
 
 
 class AccordionStyle(object):
@@ -474,7 +472,7 @@ class AccordionWidget(QScrollArea, object):
             return item
         except Exception:
             self.setUpdatesEnabled(True)
-            LOGGER.exception('Error while adding item to accordion')
+            logger.exception('Error while adding item to accordion')
             return None
 
     def clear(self):

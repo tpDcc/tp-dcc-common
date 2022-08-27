@@ -11,9 +11,10 @@ import time
 import logging
 from collections import OrderedDict
 
-from tpDcc.libs.python import python, fileio, path, jsonio
+from tp.core import log
+from tp.common.python import helpers, fileio, path, jsonio
 
-LOGGER = logging.getLogger('tpDcc-libs-python')
+logger = log.tpLogger
 
 
 class FileSettings(object):
@@ -167,7 +168,7 @@ class FileSettings(object):
         lines = list()
         for key in self.settings_dict.keys():
             value = self.settings_dict[key]
-            if python.is_string(value):
+            if helpers.is_string(value):
                 value = '"{}"'.format(value)
             if value is None:
                 value = 'None'
@@ -178,7 +179,7 @@ class FileSettings(object):
         try:
             write.write(lines)
         except Exception:
-            LOGGER.debug('Impossible to write in {}'.format(self.file_path))
+            logger.debug('Impossible to write in {}'.format(self.file_path))
             time.sleep(.1)
             write.write(lines)
 

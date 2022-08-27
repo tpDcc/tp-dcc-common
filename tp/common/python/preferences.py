@@ -10,16 +10,16 @@ from __future__ import print_function, division, absolute_import
 import os
 import json
 import pickle
-import logging
 
-from tpDcc.libs.python import python, decorators
+from tp.core import log
+from tp.common.python import helpers, decorators
 
-if python.is_python2():
+if helpers.is_python2():
     json_decode_error = Exception
 else:
     json_decode_error = json.decoder.JSONDecodeError
 
-logger = logging.getLogger('tpDcc-libs-python')
+logger = log.tpLogger
 
 _broken_files = dict()
 

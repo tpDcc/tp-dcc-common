@@ -12,8 +12,8 @@ import copy
 from Qt.QtCore import Qt, QSize
 from Qt.QtGui import QIcon, QColor, QPainter, QPen
 
-from tpDcc.libs.python import python
-from tpDcc.libs.resources.core import utils, color, cache, pixmap as px
+from tp.common.python import helpers
+from tp.common.resources import utils, color, cache, pixmap as px
 
 
 class Icon(QIcon, object):
@@ -266,15 +266,15 @@ def colorize_layered_icon(icons, size, colors=None, icon_scaling=None, tint_colo
     if not icons:
         return
 
-    icons = python.force_list(icons)
+    icons = helpers.force_list(icons)
 
     default_size = 1
     size = utils.dpi_scale(size)
 
     # Create copies of the lists
     icons = list(icons)
-    icon_scaling = python.force_list(icon_scaling)
-    colors = python.force_list(colors)
+    icon_scaling = helpers.force_list(icon_scaling)
+    colors = helpers.force_list(colors)
 
     if colors is None or (len(icons) > len(colors)):
         colors = colors or list()

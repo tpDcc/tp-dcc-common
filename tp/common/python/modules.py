@@ -12,18 +12,18 @@ import sys
 import uuid
 import pkgutil
 import inspect
-import logging
 import importlib
 import traceback
 
-from tpDcc.libs.python import python, path as path_utils
+from tp.core import log
+from tp.common.python import helpers, path as path_utils
 
-if python.is_python3():
+if helpers.is_python3():
     from importlib.machinery import SourceFileLoader
 else:
     import imp
 
-logger = logging.getLogger('tpDcc-libs-python')
+logger = log.tpLogger
 
 
 def is_dotted_module_path(module_path):
@@ -100,7 +100,7 @@ def import_module(module_path, name=None, skip_warnings=False, skip_errors=False
             module_path = os.path.join(module_path, '__init__.py')
             if not os.path.exists(module_path):
                 raise ValueError('Cannot find module path: "{}"'.format(module_path))
-        if python.is_python3():
+        if helpers.is_python3():
             return SourceFileLoader(name, os.path.realpath(module_path)).load_module()
         else:
             if module_path.endswith('.py'):
@@ -146,7 +146,7 @@ def iterate_modules(path, exclude=None, skip_inits=True, recursive=True, return_
     :return: iterator
     """
 
-    exclude = python.force_list(exclude)
+    exclude = helpers.force_list(exclude)
     _exclude = ['__init__.py', '__init__.pyc'] if skip_inits else list()
 
     modules_found = dict()
@@ -239,7 +239,7 @@ def load_module_from_source(file_path, unique_namespace=False):
     module_name = '{}{}'.format(file_name, str(uuid.uuid4())) if unique_namespace else file_name
 
     try:
-        if python.is_python2():
+        if helpers.is_python2():
             if file_path.endswith('.py'):
                 return imp.load_source(module_name, file_path)
             elif file_path.endswith('.pyc'):

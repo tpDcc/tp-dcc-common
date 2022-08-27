@@ -9,8 +9,8 @@ from __future__ import print_function, division, absolute_import
 
 import os
 
-from tpDcc.libs.python import folder, path
-from tpDcc.libs.resources.core import utils, pixmap as pixmap_resource, icon as icon_resource, theme as theme_resource
+from tp.common.python import folder, path
+from tp.common.resources import utils, pixmap as pixmap_resource, icon as icon_resource, theme as theme_resource
 
 
 class Resource(object):

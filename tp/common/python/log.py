@@ -10,15 +10,14 @@ from __future__ import print_function, division, absolute_import
 import os
 import logging
 from logging.handlers import RotatingFileHandler, SysLogHandler
+from tp.common.python import osplatform
 
 try:
     import curses
 except ImportError:
     curses = None
 
-loggers = []
-
-from tpDcc.libs.python import osplatform
+loggers = list()
 
 
 class LoggerLevel:
@@ -327,7 +326,7 @@ def open_logger(logger):
     :param logger: logger, logger object to open
     """
 
-    from tpDcc.libs.python import fileio
+    from tp.common.python import fileio
 
     log_file = None
     for handler in logger.handlers:

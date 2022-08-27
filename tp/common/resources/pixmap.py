@@ -10,7 +10,7 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt
 from Qt.QtGui import QPixmap, QImage, QColor, QPainter
 
-from tpDcc.libs.resources.core import cache, color
+from tp.common.resources import cache, color
 
 
 class Pixmap(QPixmap, object):

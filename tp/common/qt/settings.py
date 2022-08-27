@@ -13,7 +13,7 @@ import sys
 from Qt.QtCore import QSettings
 from Qt.QtWidgets import QMainWindow, QDockWidget
 
-from tpDcc.libs.python import python, strings
+from tp.common.python import helpers, strings
 
 
 class QtSettings(QSettings, object):
@@ -51,7 +51,7 @@ class QtSettings(QSettings, object):
                 self.endGroup()
             return default_value
 
-        if python.is_string(val) and val.lower() in ['true', 'false']:
+        if helpers.is_string(val) and val.lower() in ['true', 'false']:
             if begin_group:
                 self.endGroup()
             return strings.to_boolean(val)

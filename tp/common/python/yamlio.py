@@ -13,9 +13,10 @@ import logging
 
 import yaml
 
-logger = logging.getLogger('tpDcc-libs-python')
+from tp.core import log
+from tp.common.python import yamlordereddictloader
 
-from tpDcc.libs.python import yamlordereddictloader
+logger = log.tpLogger
 
 
 def write_to_file(data, filename, **kwargs):

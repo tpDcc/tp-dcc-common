@@ -10,9 +10,9 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt, Signal
 from Qt.QtWidgets import QLineEdit, QMenu, QActionGroup, QAction, QWidgetAction
 
-from tpDcc.libs.python import python
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.core import qtutils, formatters
+from tp.common.python import helpers
+from tp.common.resources import theme
+from tp.common.qt import qtutils, formatters
 
 
 @theme.mixin
@@ -68,7 +68,7 @@ class BaseMenu(QMenu, object):
         assert isinstance(option_list, list)
         if option_list:
             if all(isinstance(i, (str, unicode)) for i in option_list):
-                option_list = python.from_list_to_nested_dict(option_list, separator=self.property('separator'))
+                option_list = helpers.from_list_to_nested_dict(option_list, separator=self.property('separator'))
             if all(isinstance(i, (int, float)) for i in option_list):
                 option_list = [{'value': i, 'label': str(i)} for i in option_list]
         self.setProperty('data', option_list)
@@ -188,7 +188,7 @@ class Menu(QMenu, object):
         :return: QAction
         """
 
-        if python.is_string(before):
+        if helpers.is_string(before):
             before = self.find_action(before)
 
         return super(Menu, self).insertAction(before, *args)
@@ -202,7 +202,7 @@ class Menu(QMenu, object):
         :return: QAction
         """
 
-        if python.is_string(before):
+        if helpers.is_string(before):
             before = self.find_action(before)
 
         return super(Menu, self).insertMenu(before, menu)
@@ -214,7 +214,7 @@ class Menu(QMenu, object):
         :return: QAction
         """
 
-        if python.is_string(before):
+        if helpers.is_string(before):
             before = self.find_action(before)
 
         return super(Menu, self).insertSeparator(before)

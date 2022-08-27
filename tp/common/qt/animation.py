@@ -11,7 +11,7 @@ from Qt.QtCore import Qt, QPoint, QTimer, QPropertyAnimation, QEasingCurve
 from Qt.QtWidgets import QGraphicsOpacityEffect
 from Qt.QtGui import QFont, QColor, QPen, QBrush
 
-from tpDcc import dcc
+from tp.core import dcc
 
 
 class BaseAnimObject(object):

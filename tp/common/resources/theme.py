@@ -10,17 +10,16 @@ from __future__ import print_function, division, absolute_import
 import os
 import types
 import inspect
-import logging
 
 from Qt.QtCore import QObject, Signal
 from Qt.QtGui import QColor
 
-from tpDcc import dcc
-from tpDcc.managers import resources
-from tpDcc.libs.python import yamlio, color, python
-from tpDcc.libs.resources.core import utils, style, cache, color as qt_color
+from tp.core import log, dcc
+from tp.core.managers import resources
+from tp.common.python import helpers, color, yamlio
+from tp.common.resources import utils, style, cache, color as qt_color
 
-LOGGER = logging.getLogger('tpDcc-libs-qt')
+logger = log.tpLogger
 
 
 def mixin(cls):
@@ -140,7 +139,7 @@ class Theme(QObject, object):
             return super(Theme, self).__getattribute__(item)
 
         option_value = options[item]
-        if python.is_string(option_value):
+        if helpers.is_string(option_value):
             if option_value.startswith('^'):
                 return utils.dpi_scale(int(option_value[1:]))
             if color.string_is_hex(option_value):
@@ -161,7 +160,7 @@ class Theme(QObject, object):
         try:
             theme_data = yamlio.read_file(theme_file)
         except Exception:
-            LOGGER.warning('Impossible to load theme data from file: "{}"!'.format(theme_file))
+            logger.warning('Impossible to load theme data from file: "{}"!'.format(theme_file))
             return None
 
         self._style = theme_data.get('style', 'default')
@@ -169,7 +168,7 @@ class Theme(QObject, object):
 
         theme_name = theme_data.get('name', None)
         if not theme_name:
-            LOGGER.warning('Impossible to retrieve them name from theme file: "{}"!'.format(theme_file))
+            logger.warning('Impossible to retrieve them name from theme file: "{}"!'.format(theme_file))
         else:
             self.set_name(theme_name)
 
@@ -236,7 +235,7 @@ class Theme(QObject, object):
         :return: bool
         """
 
-        if python.is_list(self.background_color):
+        if helpers.is_list(self.background_color):
             bg_color = qt_color.Color(*self.background_color)
         else:
             bg_color = qt_color.Color(self.background_color)
@@ -582,7 +581,7 @@ class Theme(QObject, object):
         }
 
         if not skip_instance_attrs:
-            inst_attrs = python.get_instance_user_attributes(self)
+            inst_attrs = helpers.get_instance_user_attributes(self)
             for attr in inst_attrs:
                 options[attr[0]] = attr[1]
 
@@ -600,9 +599,9 @@ class Theme(QObject, object):
                     continue
                 if isinstance(v, Signal):
                     continue
-                if python.is_int(v):
+                if helpers.is_int(v):
                     all_options[k] = int(v)
-                elif python.is_float(v):
+                elif helpers.is_float(v):
                     all_options[k] = float(v)
                 elif isinstance(v, QColor):
                     all_options[k] = qt_color.Color(v).to_string()

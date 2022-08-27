@@ -7,7 +7,7 @@ Module that functions to retrieve info from running processes
 
 from __future__ import print_function, division, absolute_import
 
-import logging
+from tp.core import log
 
 PSUTIL_AVAILABLE = True
 try:
@@ -15,7 +15,7 @@ try:
 except Exception:
     PSUTIL_AVAILABLE = False
 
-logger = logging.getLogger('tpDcc-libs-python')
+logger = log.tpLogger
 
 
 def check_if_process_is_running(process_name):

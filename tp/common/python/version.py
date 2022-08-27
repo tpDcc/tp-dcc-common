@@ -9,9 +9,10 @@ import os
 import getpass
 import logging
 
-from tpDcc.libs.python import folder, path, fileio, jsonio, sort, name as name_utils
+from tp.core import log
+from tp.common.python import folder, path, fileio, jsonio, sort, name as name_utils
 
-logger = logging.getLogger('tpDcc-libs-python')
+logger = log.tpLogger
 
 
 class SemanticVersion(object):

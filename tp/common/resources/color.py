@@ -13,7 +13,7 @@ import random
 from Qt.QtCore import Qt, QRegExp, qFuzzyCompare
 from Qt.QtGui import QColor
 
-from tpDcc.libs.python import python
+from tp.common.python import helpers
 
 _NUMERALS = '0123456789abcdefABCDEF'
 _HEXDEC = {v: int(v, 16) for v in (x + y for x in _NUMERALS for y in _NUMERALS)}
@@ -283,7 +283,7 @@ def convert_2_hex(color):
     :return: str
     """
 
-    if python.is_string(color):
+    if helpers.is_string(color):
         if string_is_hex(color):
             return color
         else:
@@ -356,7 +356,7 @@ def generate_color(primary_color, index):
         return max((v_comp * 100 - brightness_step2 * i) / 100, 0.0)
 
     light = index <= 6
-    hsv_color = Color(primary_color) if python.is_string(primary_color) else primary_color
+    hsv_color = Color(primary_color) if helpers.is_string(primary_color) else primary_color
     index = light_color_count + 1 - index if light else index - light_color_count - 1
 
     return Color.fromHsvF(

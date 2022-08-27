@@ -10,7 +10,9 @@ from __future__ import print_function, division, absolute_import
 import time
 import logging
 
-logger = logging.getLogger('tpDcc-libs-python')
+from tp.core import log
+
+logger = log.tpLogger
 
 
 class StopWatch(object):

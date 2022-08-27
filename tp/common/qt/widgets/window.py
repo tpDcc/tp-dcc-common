@@ -16,16 +16,14 @@ from Qt.QtCore import Qt, Signal, QByteArray, QSettings
 from Qt.QtWidgets import QApplication, QSizePolicy, QToolBar, QScrollArea, QMenuBar, QAction, QDockWidget
 from Qt.QtWidgets import QMainWindow, QWidget, QFrame, QTabWidget, QTabBar
 
-from tpDcc import dcc
-from tpDcc.core import dcc as core_dcc
-from tpDcc.managers import resources
-from tpDcc.libs.python import python, path, folder
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.core import qtutils, animation, statusbar, dragger, resizers
-from tpDcc.libs.qt.core import settings as qt_settings
-from tpDcc.libs.qt.widgets import layouts
+from tp.core import log, dcc
+from tp.core.managers import resources
+from tp.common.python import helpers, path, folder
+from tp.common.resources import theme
+from tp.common.qt import qtutils, animation, statusbar, dragger, resizers, settings as qt_settings
+from tp.common.qt.widgets import layouts
 
-LOGGER = logging.getLogger('tpDcc-libs-qt')
+LOGGER = log.tpLogger
 
 
 class WindowContents(QFrame, object):
@@ -831,7 +829,7 @@ class MainWindow(BaseWindow, object):
         super(MainWindow, self).closeEvent(event)
 
     def setWindowIcon(self, icon):
-        if python.is_string(icon):
+        if helpers.is_string(icon):
             icon = resources.icon(icon)
         if self.is_frameless() or (hasattr(self, '_dragger') and self._dragger):
             self._dragger.set_icon(icon)
@@ -923,11 +921,11 @@ class MainWindow(BaseWindow, object):
         if type(callback_type) in [list, tuple]:
             callback_type = callback_type[0]
 
-        if callback_type not in core_dcc.callbacks():
+        if callback_type not in dcc.callbacks():
             LOGGER.warning('Callback Type: "{}" is not valid! Aborting callback creation ...'.format(callback_type))
             return
 
-        from tpDcc.managers import callbacks
+        from tp.core.managers import callbacks
         return callbacks.CallbacksManager().register(callback_type=callback_type, fn=fn, owner=self)
 
     def unregister_callbacks(self):
@@ -935,7 +933,7 @@ class MainWindow(BaseWindow, object):
         Unregisters all callbacks registered by this window
         """
 
-        from tpDcc.managers import callbacks
+        from tp.core.managers import callbacks
         callbacks.CallbacksManager().unregister_owner_callbacks(owner=self)
 
     # ============================================================================================================

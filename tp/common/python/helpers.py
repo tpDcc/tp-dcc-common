@@ -21,7 +21,7 @@ from itertools import groupby
 from operator import itemgetter
 from collections import OrderedDict
 
-from tpDcc.libs.python import strings, osplatform
+from tp.common.python import strings, osplatform
 
 
 class RollbackImporter(object):
@@ -177,7 +177,7 @@ def load_python_module(module_name, directory):
     """
 
     import imp
-    from tpDcc.libs.python import path
+    from tp.common.python import path
 
     if not path.is_dir(directory):
         return None
@@ -208,7 +208,7 @@ def import_python_module(module_name, directory):
     :return: mod, imported module
     """
 
-    from tpDcc.libs.python import path, fileio
+    from tp.common.python import path, fileio
 
     if not path.is_dir(directory=directory):
         return
@@ -270,7 +270,7 @@ def get_version():
     :return: SemanticVersion, python version
     """
 
-    from tpDcc.libs.python import version
+    from tp.common.python import version
 
     py_version = sys.version_info
     current_version = version.SemanticVersion(
@@ -284,7 +284,7 @@ def get_version():
 
 def is_python2():
     """
-    Returns whether or not current version is Python 2
+    Returns whether current version is Python 2
     :return: bool
     """
 
@@ -293,7 +293,7 @@ def is_python2():
 
 def is_python3():
     """
-    Returns whether or not current version is Python 3
+    Returns whether current version is Python 3
     :return: bool
     """
 
@@ -743,7 +743,7 @@ def delete_pyc_file(python_script):
     :param python_script: str
     """
 
-    from tpDcc.libs.python import path, fileio
+    from tp.common.python import path, fileio
 
     script_name = path.get_basename(python_script)
     if not python_script.endswith('.py'):

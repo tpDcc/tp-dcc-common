@@ -14,7 +14,7 @@ try:
 except ImportError:
     import urllib
 
-from tpDcc.libs.python import osplatform
+from tp.common.python import osplatform
 
 
 def open_web(url):

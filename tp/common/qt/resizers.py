@@ -11,7 +11,7 @@ from Qt.QtCore import Qt, Signal, QSize
 from Qt.QtWidgets import QApplication, QWidget
 from Qt.QtGui import QCursor, QColor, QPainter
 
-from tpDcc.libs.qt.core import qtutils
+from tp.common.qt import qtutils
 
 
 class ResizeDirection:

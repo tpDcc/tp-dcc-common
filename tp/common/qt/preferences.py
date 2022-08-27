@@ -10,9 +10,9 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt, Signal
 from Qt.QtWidgets import QSizePolicy, QWidget, QSplitter, QScrollArea
 
-from tpDcc.managers import resources
-from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import layouts, stack, buttons, dividers
+from tp.core.managers import resources
+from tp.common.qt import base
+from tp.common.qt.widgets import layouts, stack, buttons, dividers
 
 
 class PreferencesWidget(base.BaseWidget, object):

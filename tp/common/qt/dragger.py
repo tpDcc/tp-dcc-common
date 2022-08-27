@@ -11,11 +11,11 @@ from Qt.QtCore import Qt, Signal, QPoint, QSize, QTimer
 from Qt.QtWidgets import QApplication, QWidget, QFrame, QPushButton
 from Qt.QtGui import QPainter
 
-from tpDcc import dcc
-from tpDcc.managers import resources
-from tpDcc.libs.python import python
-from tpDcc.libs.qt.core import qtutils
-from tpDcc.libs.qt.widgets import layouts, label, dividers
+from tp.core import dcc
+from tp.core.managers import resources
+from tp.common.python import helpers
+from tp.common.qt import qtutils
+from tp.common.qt.widgets import layouts, label, dividers
 
 
 class WindowDragger(QFrame, object):
@@ -170,7 +170,7 @@ class WindowDragger(QFrame, object):
         """
 
         icon = icon or self._window.windowIcon()
-        if icon and python.is_string(icon):
+        if icon and helpers.is_string(icon):
             icon = resources.icon(icon)
         if not icon or icon.isNull():
             icon = resources.icon('tpDcc')
@@ -195,7 +195,7 @@ class WindowDragger(QFrame, object):
         """
 
         icon = icon or self._window.windowIcon()
-        if icon and python.is_string(icon):
+        if icon and helpers.is_string(icon):
             icon = resources.icon(icon)
         if not icon or icon.isNull():
             icon = resources.icon('tpDcc')
@@ -297,8 +297,6 @@ class WindowDragger(QFrame, object):
         :param frameless: bool
         """
 
-        from tpDcc.managers import tools
-
         tool_inst = tools.ToolsManager().get_tool_by_plugin_instance(self._window)
         if not tool_inst:
             return
@@ -335,7 +333,7 @@ class WindowDragger(QFrame, object):
         """
 
         # To avoid cyclic imports
-        from tpDcc.libs.qt.widgets import buttons
+        from tp.common.qt.widgets import buttons
 
         logo_button = buttons.IconMenuButton(parent=self)
         logo_button.setIconSize(QSize(24, 24))
@@ -398,8 +396,6 @@ class WindowDragger(QFrame, object):
         Internal callback function that is called when the user clicks on close button
         """
 
-        from tpDcc.managers import tools
-
         closed = False
         if hasattr(self._window, 'WindowId'):
             closed = tools.ToolsManager().close_tool(self._window.WindowId, force=False)
@@ -432,7 +428,7 @@ class DialogDragger(WindowDragger, object):
         """
 
         # To avoid cyclic imports
-        from tpDcc.libs.qt.widgets import buttons
+        from tp.common.qt.widgets import buttons
 
         logo_button = buttons.IconMenuButton(parent=self)
         logo_button.setIconSize(QSize(24, 24))

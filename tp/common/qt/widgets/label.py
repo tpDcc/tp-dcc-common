@@ -11,8 +11,8 @@ from Qt.QtCore import Qt, Signal, Property, QRect, QSize, QPropertyAnimation
 from Qt.QtWidgets import QSizePolicy, QLabel, QLineEdit, QStyleOption
 from Qt.QtGui import QFontMetrics, QTextCursor, QTextDocument, QPainter
 
-from tpDcc.libs.qt.core import qtutils
-from tpDcc.libs.qt.widgets import graphicseffects
+from tp.common.qt import qtutils
+from tp.common.qt.widgets import graphicseffects
 
 
 class BaseLabel(QLabel, object):

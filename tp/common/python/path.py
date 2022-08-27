@@ -12,12 +12,12 @@ import os
 import stat
 import string
 import shutil
-import logging
 import tempfile
 import traceback
 import contextlib
 
-from tpDcc.libs.python import name, folder, osplatform, python, win32
+from tp.core import log
+from tp.common.python import name, folder, osplatform, helpers, win32
 
 SEPARATOR = '/'
 BAD_SEPARATOR = '\\'
@@ -30,7 +30,7 @@ WEB_PREFIX = 'https://'
 # We use one separator depending if we are working on Windows (nt) or other operative system
 NATIVE_SEPARATOR = (SEPARATOR, BAD_SEPARATOR)[os.name == 'nt']
 
-logger = logging.getLogger('tpDcc-libs-python')
+logger = log.tpLogger
 
 
 class FindUniquePath(name.FindUniqueString, object):
@@ -84,7 +84,7 @@ def normalize_path(path):
 
     path = path.replace(BAD_SEPARATOR, SEPARATOR).replace(PATH_SEPARATOR, SEPARATOR)
 
-    if python.is_python2():
+    if helpers.is_python2():
         try:
             path = unicode(path.replace(r'\\', r'\\\\'), "unicode_escape").encode('utf-8')
         except TypeError:
@@ -381,7 +381,7 @@ def get_basename(directory, with_extension=True):
     :return: variant, str || bool (if fails)
     """
 
-    from tpDcc.libs.python import fileio
+    from tp.common.python import fileio
 
     try:
         base_name = os.path.basename(directory)

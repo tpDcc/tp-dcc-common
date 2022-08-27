@@ -10,12 +10,13 @@ from __future__ import print_function, division, absolute_import
 import os
 import sys
 import stat
-import logging
 import getpass
 import platform
 import subprocess
 
-logger = logging.getLogger('tpDcc-libs-python')
+from tp.core import log
+
+logger = log.tpLogger
 
 
 class Platforms(object):

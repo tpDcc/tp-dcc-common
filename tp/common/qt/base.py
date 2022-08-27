@@ -10,9 +10,9 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt, Property, Signal, Property
 from Qt.QtWidgets import QApplication, QSizePolicy, QWidget, QFrame, QScrollArea, QWhatsThis
 
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.core import qtutils, contexts as qt_contexts
-from tpDcc.libs.qt.widgets import layouts
+from tp.common.resources import theme
+from tp.common.qt import qtutils, contexts as qt_contexts
+from tp.common.qt.widgets import layouts
 
 
 @theme.mixin

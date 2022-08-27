@@ -7,7 +7,7 @@ Module that contains base class to handle DPI functionality
 
 from __future__ import print_function, division, absolute_import
 
-from tpDcc.libs.qt.core import qtutils
+from tp.common.qt import qtutils
 
 
 class DPIScaling(object):

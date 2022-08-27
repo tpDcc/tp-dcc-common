@@ -10,8 +10,8 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt, QSize, QEvent
 from Qt.QtWidgets import QWidget, QDockWidget, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QToolButton, QMenu
 
-from tpDcc.core import tool
-from tpDcc.managers import resources
+from tp.core import tool
+from tp.core.managers import resources
 
 
 class ShelfTool(tool.DccTool, object):

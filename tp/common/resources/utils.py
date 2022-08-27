@@ -10,7 +10,6 @@ from __future__ import print_function, division, absolute_import
 import os
 import re
 import sys
-import logging
 import subprocess
 from xml.etree import ElementTree
 
@@ -22,7 +21,8 @@ except ImportError:
 from Qt import __binding__
 from Qt.QtWidgets import QApplication
 
-from tpDcc.libs.python import strings, path, fileio
+from tp.core import log
+from tp.common.python import strings, path, fileio
 
 DEFAULT_DPI = 96
 
@@ -31,13 +31,13 @@ UILOADER_AVAILABLE = True
 PYSIDEUIC_AVAILABLE = True
 QT_ERROR_MESSAGE = 'Qt.py is not available and Qt related functionality will not be available!'
 
-LOGGER = logging.getLogger('tpDcc-libs-resources')
+logger = log.tpLogger
 
 try:
     from Qt import QtCore, QtGui, QtWidgets
 except ImportError as exc:
     QT_AVAILABLE = False
-    LOGGER.warning('Impossible to load Qt libraries. Qt dependant functionality will be disabled!')
+    logger.warning('Impossible to load Qt libraries. Qt dependant functionality will be disabled!')
 
 if QT_AVAILABLE:
     if __binding__ == 'PySide2':
@@ -264,7 +264,7 @@ def find_rcc_executable_file():
             os.path.join(os.path.dirname(os.path.dirname(sys.executable)), 'Lib', 'site-packages', 'PySide2')
         ])
     if not exe_name:
-        LOGGER.warning('No valid RCC executable find found!')
+        logger.warning('No valid RCC executable find found!')
         return
 
     for folder in folders_to_find:
@@ -288,7 +288,7 @@ def create_python_qrc_file(qrc_file, py_file):
 
     pyside_rcc_exe_path = find_rcc_executable_file()
     if not os.path.isfile(pyside_rcc_exe_path):
-        LOGGER.warning('Impossible to generate Python QRC file because no PySide RCC executable path found!')
+        logger.warning('Impossible to generate Python QRC file because no PySide RCC executable path found!')
         return
 
     try:
@@ -445,11 +445,11 @@ def load_ui(ui_file, parent_widget=None):
     """
 
     if not QT_AVAILABLE:
-        LOGGER.error(QT_ERROR_MESSAGE)
+        logger.error(QT_ERROR_MESSAGE)
         return None
 
     if not UILOADER_AVAILABLE:
-        LOGGER.error('QtUiLoader is not available, impossible teo load ui file!')
+        logger.error('QtUiLoader is not available, impossible teo load ui file!')
         return None
 
     # IMPORTANT: Do not change customWidgets variable name
@@ -469,11 +469,11 @@ def load_ui_type(ui_file):
     """
 
     if not QT_AVAILABLE:
-        LOGGER.warning(QT_ERROR_MESSAGE)
+        logger.warning(QT_ERROR_MESSAGE)
         return None, None
 
     if not PYSIDEUIC_AVAILABLE:
-        LOGGER.warning('pysideuic is not available. UI compilation functionality is not available!')
+        logger.warning('pysideuic is not available. UI compilation functionality is not available!')
         return None, None
 
     parsed = ElementTree.parse(ui_file)
@@ -501,15 +501,15 @@ def compile_ui(ui_file, py_file):
     """
 
     if not QT_AVAILABLE:
-        LOGGER.warning(QT_ERROR_MESSAGE)
+        logger.warning(QT_ERROR_MESSAGE)
         return
 
     if not PYSIDEUIC_AVAILABLE:
-        LOGGER.warning('pysideuic is not available. UI compilation functionality is not available!')
+        logger.warning('pysideuic is not available. UI compilation functionality is not available!')
         return
 
     if not os.path.isfile(ui_file):
-        LOGGER.warning('UI file "{}" does not exists!'.format(ui_file))
+        logger.warning('UI file "{}" does not exists!'.format(ui_file))
         return
 
     if os.path.isfile(ui_file):
@@ -527,11 +527,11 @@ def compile_uis(root_path, recursive=True, use_qt=True):
     """
 
     if not QT_AVAILABLE:
-        LOGGER.warning(QT_ERROR_MESSAGE)
+        logger.warning(QT_ERROR_MESSAGE)
         return
 
     if not os.path.exists(root_path):
-        LOGGER.error('Impossible to compile UIs because path "{}" is not valid!'.format(root_path))
+        logger.error('Impossible to compile UIs because path "{}" is not valid!'.format(root_path))
         return
 
     if recursive:
@@ -542,7 +542,7 @@ def compile_uis(root_path, recursive=True, use_qt=True):
 
                     py_file = ui_file.replace('.ui', '_ui.py')
 
-                    LOGGER.debug('> COMPILING: {}'.format(ui_file))
+                    logger.debug('> COMPILING: {}'.format(ui_file))
                     compile_ui(ui_file=ui_file, py_file=py_file)
 
                     # pysideuic will use the proper Qt version used to compile it when generating .ui Python code
@@ -587,4 +587,4 @@ def clean_compiled_uis(root_path, recusive=True):
             for f in files:
                 if f.endswith('_ui.py') or f.endswith('_ui.pyc'):
                     os.remove(os.path.join(root, f))
-                    LOGGER.debug('Removed compiled UI: "{}"'.format(os.path.join(root, f)))
+                    logger.debug('Removed compiled UI: "{}"'.format(os.path.join(root, f)))

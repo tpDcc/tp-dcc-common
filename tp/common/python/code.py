@@ -11,7 +11,7 @@ import sys
 import ast
 import string
 
-from tpDcc.libs.python import python, fileio, path as path_utils
+from tp.common.python import helpers, fileio, path as path_utils
 
 
 def get_ast_function_args(function_node):
@@ -86,8 +86,8 @@ def get_ast_class_members(class_node, parents=None, skip_list=None):
     :return: list(str)
     """
 
-    parents = python.force_list(parents)
-    skip_list = python.force_list(skip_list)
+    parents = helpers.force_list(parents)
+    skip_list = helpers.force_list(skip_list)
 
     class_functions = list()
     class_variables = list()

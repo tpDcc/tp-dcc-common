@@ -13,7 +13,7 @@ if 'win' in sys.platform:
     import ctypes
     import ctypes.wintypes
 
-from tpDcc.libs.python import python
+from tp.common.python import helpers
 
 GWL_WNDPROC = -4
 GWL_HINSTANCE = -6
@@ -304,7 +304,7 @@ def _get_win_folder_from_registry(csidl_name):
     Based on appdirs _get_win_folder_from_registry function
     """
 
-    if python.is_python3():
+    if helpers.is_python3():
         import winreg as _winreg
     else:
         import _winreg

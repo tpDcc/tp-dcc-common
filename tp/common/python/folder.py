@@ -15,13 +15,14 @@ import time
 import errno
 import shutil
 import fnmatch
-import logging
 import tempfile
 import traceback
 import subprocess
 from distutils.dir_util import copy_tree
 
-logger = logging.getLogger('tpDcc-libs-python')
+from tp.core import log
+
+logger = log.tpLogger
 
 
 def create_folder(name, directory=None, make_unique=False):
@@ -33,7 +34,7 @@ def create_folder(name, directory=None, make_unique=False):
     :return: variant, str || bool, folder name with path or False if the folder creation failed
     """
 
-    from tpDcc.libs.python import path, osplatform
+    from tp.common.python import path, osplatform
 
     full_path = False
 
@@ -74,7 +75,7 @@ def rename_folder(directory, name, make_unique=False):
     :return: str, path of the renamed folder
     """
 
-    from tpDcc.libs.python import path, osplatform
+    from tp.common.python import path, osplatform
 
     base_name = path.get_basename(directory=directory)
     if base_name == name:
@@ -115,7 +116,7 @@ def copy_folder(directory, directory_destination, ignore_patterns=[]):
     :return: str, destination directory
     """
 
-    from tpDcc.libs.python import path, osplatform
+    from tp.common.python import path, osplatform
 
     if not path.is_dir(directory=directory):
         return
@@ -198,7 +199,7 @@ def delete_folder(folder_name, directory=None):
     :return: str, folder that was deleted with path
     """
 
-    from tpDcc.libs.python import name, path, osplatform
+    from tp.common.python import name, path, osplatform
 
     def delete_read_only_error(action, name, exc):
         """
@@ -229,7 +230,7 @@ def clean_folder(directory):
     :param directory: str
     """
 
-    from tpDcc.libs.python import path, fileio, folder
+    from tp.common.python import path, fileio, folder
 
     base_name = path.get_basename(directory=directory)
     dir_name = path.get_dirname(directory=directory)
@@ -256,9 +257,9 @@ def get_folder_size(directory, round_value=2, skip_names=None):
     :return: str
     """
 
-    from tpDcc.libs.python import python, path, fileio
+    from tp.common.python import helpers, path, fileio
 
-    skip_names = python.force_list(skip_names)
+    skip_names = helpers.force_list(skip_names)
 
     size = 0
     for root, dirs, files in os.walk(directory):
@@ -281,7 +282,7 @@ def get_size(file_path, round_value=2):
     :return: int
     """
 
-    from tpDcc.libs.python import fileio, path
+    from tp.common.python import fileio, path
 
     size = 0
     if path.is_dir(file_path):
@@ -321,7 +322,7 @@ def get_folders(root_folder, recursive=False, full_path=False):
     :return: list<str>
     """
 
-    from tpDcc.libs.python import path
+    from tp.common.python import path
 
     found_folders = list()
     if not recursive:
@@ -349,7 +350,7 @@ def get_folders(root_folder, recursive=False, full_path=False):
 
 def get_folders_without_dot_prefix(directory, recursive=False, base_directory=None):
 
-    from tpDcc.libs.python import path, version
+    from tp.common.python import path, version
 
     if not path.exists(directory):
         return
@@ -385,7 +386,7 @@ def get_files(root_folder, full_path=False, recursive=False, pattern="*"):
     :return: list<str>
     """
 
-    from tpDcc.libs.python import path
+    from tp.common.python import path
 
     if not path.is_dir(root_folder):
         return []
@@ -481,7 +482,7 @@ def get_files_date_sorted(root_directory, extension=None, filter_text=''):
     :return: list(str), list of files date sorted in the directory
     """
 
-    from tpDcc.libs.python import fileio
+    from tp.common.python import fileio
 
     def _get_mtime(fld):
         return os.stat(os.path.join(root_directory, fld)).st_mtime
@@ -523,7 +524,7 @@ def get_user_folder(absolute=True):
     :return: str, path to the user folder
     """
 
-    from tpDcc.libs.python import path
+    from tp.common.python import path
 
     if absolute:
         return path.clean_path(os.path.abspath(os.path.expanduser('~')))
@@ -537,7 +538,7 @@ def get_temp_folder():
     :return: str, path to the temp folder
     """
 
-    from tpDcc.libs.python import path
+    from tp.common.python import path
 
     return path.clean_path(tempfile.gettempdir())
 
@@ -616,7 +617,7 @@ def get_latest_file_at_folder(folder_path, filter_text=''):
     :return: str
     """
 
-    from tpDcc.libs.python import path
+    from tp.common.python import path
 
     files = get_files_date_sorted(folder_path, filter_text=filter_text)
     if not files:

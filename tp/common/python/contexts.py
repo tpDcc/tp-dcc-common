@@ -8,10 +8,11 @@ Module that contains utility contexts
 from __future__ import print_function, division, absolute_import
 
 import time
-import logging
 import contextlib
 
-logger = logging.getLogger('tpDcc-libs-python')
+from tp.core import log
+
+logger = log.tpLogger
 
 
 @contextlib.contextmanager

@@ -15,7 +15,7 @@ import traceback
 import importlib
 from collections import OrderedDict
 
-from tpDcc.libs.python import python
+from tp.common.python import helpers
 
 
 def import_module(module_name):
@@ -58,7 +58,7 @@ def import_submodules(package_dot_path, skip_modules, recursive=True):
 
         found_modules = list()
 
-        if python.is_string(pkg):
+        if helpers.is_string(pkg):
             pkg = import_module(pkg)
         if not pkg:
             return found_modules

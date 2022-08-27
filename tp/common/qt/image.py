@@ -21,9 +21,10 @@ except ImportError:
 from Qt.QtCore import Qt, Signal, QByteArray, QRunnable, QObject, QTimer
 from Qt.QtGui import QImage, QPixmap, QBitmap, QIcon, QColor, QPainter
 
-from tpDcc.libs.python import python, path as path_utils
+from tp.core import log
+from tp.common.python import helpers, path as path_utils
 
-LOGGER = logging.getLogger('tpDcc-libs-qt')
+LOGGER = log.tpLogger
 
 ImageFormats = {
     QImage.Format_Mono: 'L',                            # Mono
@@ -148,7 +149,7 @@ def paint_background(image, background_color=None):
         LOGGER.warning(
             'background_color argument is not valid ({}) using black color instead!'.format(background_color))
         background_color = [0, 0, 0]
-    background_color = python.force_list(background_color)
+    background_color = helpers.force_list(background_color)
 
     for i in range(len(background_color)):
         if background_color[i] < 0 or background_color[i] > 255:
@@ -477,7 +478,7 @@ def image_to_base64(image_path):
     if os.path.isfile(image_path):
         with open(image_path, 'rb') as image_file:
             base64_data = base64.b64encode(image_file.read())
-            if python.is_python2():
+            if helpers.is_python2():
                 return base64_data
             else:
                 return base64_data.decode("utf-8")

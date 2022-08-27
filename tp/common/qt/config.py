@@ -17,10 +17,10 @@ try:
 except ImportError:
     pass
 
-from tpDcc import dcc
-from tpDcc.libs.python import decorators, python
+from tp.core import log, dcc
+from tp.common.python import decorators, helpers
 
-LOGGER = logging.getLogger('tpDcc-libs-qt')
+logger = log.tpLogger
 
 
 class ConfigurationAttribute(dict, object):
@@ -94,20 +94,19 @@ class YAMLConfiguration(object):
         """
 
         if not self._parsed_data:
-            LOGGER.warning('Configuration "{}" is empty"'.format(
-                self._config_name))
+            logger.warning('Configuration "{}" is empty"'.format(self._config_name))
             return default
 
         if attr_section and attr_name:
             orig_section = attr_section
             attr_section = self._parsed_data.get(attr_section, dict())
             if not attr_section:
-                LOGGER.warning('Configuration "{}" has no attribute "{}" in section "{}"'.format(
+                logger.warning('Configuration "{}" has no attribute "{}" in section "{}"'.format(
                     self._config_name, attr_name, orig_section))
                 return default
             attr_value = attr_section.get(attr_name, None)
             if attr_value is None:
-                LOGGER.warning('Configuration "{}" has no attribute "{}" in section "{}"'.format(
+                logger.warning('Configuration "{}" has no attribute "{}" in section "{}"'.format(
                     self._config_name, attr_name, attr_section))
                 return default
             return attr_value
@@ -119,8 +118,7 @@ class YAMLConfiguration(object):
                 attr_to_use = attr_name
             attr_value = self._parsed_data.get(attr_to_use, None)
             if attr_value is None:
-                LOGGER.warning('Configuration "{}" has no attribute "{}"'.format(
-                    self._config_name, attr_to_use))
+                logger.warning('Configuration "{}" has no attribute "{}"'.format(self._config_name, attr_to_use))
                 return default
             return attr_value
 
@@ -148,7 +146,7 @@ class YAMLConfiguration(object):
         """
 
         if not config_name:
-            LOGGER.error('Project Configuration File not found! {}'.format(self, config_name))
+            logger.error('Project Configuration File not found! {}'.format(self, config_name))
             return
 
         module_config_name = config_name
@@ -191,7 +189,7 @@ class ConfigurationManager(object):
         if config_paths is None:
             config_paths = list()
         else:
-            config_paths = python.force_list(config_paths)
+            config_paths = helpers.force_list(config_paths)
         for config_path in config_paths:
             self.register_config_path(config_path)
 

@@ -12,8 +12,7 @@ import contextlib
 
 from Qt.QtWidgets import QApplication, QWidget
 
-from tpDcc import dcc
-from tpDcc.dcc import window
+from tp.core import dcc, window
 
 
 @contextlib.contextmanager

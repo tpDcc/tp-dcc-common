@@ -14,12 +14,12 @@ from Qt.QtWidgets import QApplication, QSizePolicy, QAbstractButton, QPushButton
 from Qt.QtWidgets import QStyle, QStyleOptionButton, QStylePainter, QStyleOption
 from Qt.QtGui import QCursor, QIcon, QFontMetrics, QPainter, QPainterPath, QColor, QBrush, QLinearGradient
 
-from tpDcc import dcc
-from tpDcc.managers import resources
-from tpDcc.libs.python import python
-from tpDcc.libs.resources.core import icon, theme
-from tpDcc.libs.qt.core import consts, animation, qtutils, menu
-from tpDcc.libs.qt.widgets import tooltips
+from tp.core import dcc
+from tp.core.managers import resources
+from tp.common.python import helpers
+from tp.common.resources import icon, theme
+from tp.common.qt import consts, animation, qtutils, menu
+from tp.common.qt.widgets import tooltips
 
 # ===================================================================
 
@@ -857,7 +857,7 @@ class ButtonIcons(QAbstractButton):
         if any(isinstance(el, list) for el in colors):
             self.iconColors = colors
         else:
-            self.iconColors = [python.force_list(colors)]
+            self.iconColors = [helpers.force_list(colors)]
         if update and self.idleIcon is not None and self.icon is not None:
             self.update_icons()
 
@@ -1163,7 +1163,7 @@ class BaseMenuButton(QPushButton, ButtonIcons):
             if isinstance(action_icon, QIcon):
                 new_action.setIcon(action_icon)
                 new_action.setIconText(icon_text or '')
-            elif python.is_string(action_icon):
+            elif helpers.is_string(action_icon):
                 new_action.setIconText(action_icon or icon_text or None)
                 action_icon = resources.icon(action_icon)
                 new_action.setIcon(

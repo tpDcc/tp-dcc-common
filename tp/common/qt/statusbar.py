@@ -11,9 +11,9 @@ from Qt.QtCore import Qt, Property, QSize, QTimer
 from Qt.QtWidgets import QSizePolicy, QHBoxLayout, QFrame
 from Qt.QtGui import QPixmap
 
-from tpDcc.managers import resources
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.widgets import label
+from tp.core.managers import resources
+from tp.common.resources import theme
+from tp.common.qt.widgets import label
 
 
 @theme.mixin

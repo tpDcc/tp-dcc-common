@@ -11,8 +11,8 @@ from Qt.QtCore import Qt, Property
 from Qt.QtWidgets import QLabel
 from Qt.QtGui import QPixmap
 
-from tpDcc.managers import resources
-from tpDcc.libs.resources.core import theme
+from tp.core.managers import resources
+from tp.common.resources import theme
 
 
 @theme.mixin

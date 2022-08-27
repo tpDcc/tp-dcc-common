@@ -12,7 +12,7 @@ from functools import partial
 from Qt.QtCore import Qt, QPoint, QEvent, QPropertyAnimation, QEasingCurve
 from Qt.QtWidgets import QGraphicsDropShadowEffect, QGraphicsOpacityEffect
 
-from tpDcc.libs.qt.core import qtutils
+from tp.common.qt import qtutils
 
 
 def property_mixin(cls):

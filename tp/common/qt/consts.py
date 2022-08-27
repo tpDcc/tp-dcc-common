@@ -7,8 +7,6 @@ Module that contains constants for tpQtLib
 
 from __future__ import print_function, division, absolute_import
 
-LIB_ID = 'tpDcc-libs-qt'
-
 # DPI
 DEFAULT_DPI = 96
 

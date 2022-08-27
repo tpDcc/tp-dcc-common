@@ -12,7 +12,7 @@ import re
 import sys
 import string
 
-from tpDcc.libs.python import python, strings
+from tp.common.python import helpers, strings
 
 
 class FindUniqueString(object):
@@ -130,7 +130,7 @@ def get_numeric_name(text, names):
                 int_list.append(0)
 
                 int_list.sort()
-        missing_int = python.find_missing_items(int_list)
+        missing_int = helpers.find_missing_items(int_list)
         if missing_int:
             _id = str(missing_int[0])
         else:

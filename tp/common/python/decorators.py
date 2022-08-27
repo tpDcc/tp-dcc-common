@@ -15,9 +15,10 @@ import traceback
 import threading
 from functools import wraps, update_wrapper
 
-from tpDcc.libs.python import python, debug
+from tp.core import log
+from tp.common.python import helpers, debug
 
-logger = logging.getLogger('tpDcc-libs-python')
+logger = log.tpLogger
 
 
 def abstractmethod(fn):
@@ -176,7 +177,7 @@ def timestamp(f):
     def wrapper(*args, **kwargs):
         start_time = time.time()
         res = f(*args, **kwargs)
-        function_name = f.func_name if python.is_python2() else f.__name__
+        function_name = f.func_name if helpers.is_python2() else f.__name__
         logger.info('<{}> Elapsed time : {}'.format(function_name, time.time() - start_time))
         return res
     return wrapper
@@ -198,7 +199,7 @@ def try_pass(fn):
     return wrapper
 
 
-if python.is_python2():
+if helpers.is_python2():
     def empty_decorator(*args, **kwargs):
         def fn_decorator(fn):
             def wrapper(*args, **kwargs):

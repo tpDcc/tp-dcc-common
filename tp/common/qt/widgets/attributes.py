@@ -7,17 +7,16 @@ Module that contains classes to create attribute editors
 
 from __future__ import print_function, division, absolute_import
 
-import logging
-
 from Qt.QtCore import Qt, Signal, QPoint, QPointF, QSize, QRegExp
 from Qt.QtWidgets import QWidget, QGroupBox, QScrollArea, QLineEdit, QCheckBox, QSlider, QColorDialog
 from Qt.QtGui import QColor, QPalette
 
-from tpDcc.libs.python import strings as string_utils
-from tpDcc.libs.qt.core import qtutils, base, color
-from tpDcc.libs.qt.widgets import layouts, lineedit, directory
+from tp.core import log
+from tp.common.python import strings as string_utils
+from tp.common.qt import qtutils, base
+from tp.common.qt.widgets import layouts, lineedit, directory, color
 
-LOGGER = logging.getLogger('tpDcc-libs-qt')
+logger = log.tpLogger
 
 
 class AttributeEditor(base.BaseWidget, object):
@@ -431,7 +430,7 @@ class ColorPicker(BaseEditor, object):
     def OnSliderChanged(self):
         slider_value = float(self.slider.value())
         if not self._current_value:
-            LOGGER.debug(
+            logger.debug(
                 'Caching color: (%d, %d, %d)' % (
                     self.color_swatch.color[0], self.color_swatch.color[1], self.color_swatch.color[2]))
             self._current_value = self.color_swatch.color

@@ -10,8 +10,8 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt
 from Qt.QtWidgets import QWidget, QFrame
 
-from tpDcc.libs.qt.core import qtutils
-from tpDcc.libs.qt.widgets import label, layouts
+from tp.common.qt import qtutils
+from tp.common.qt.widgets import label, layouts
 
 
 class Divider(QWidget, object):
