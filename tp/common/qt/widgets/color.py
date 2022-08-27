@@ -18,12 +18,12 @@ from Qt.QtWidgets import QApplication, QWidget, QFrame, QDialog, QToolButton, QL
 from Qt.QtGui import QColor, QBrush, QPen, QPainter, QPainterPath, QGradient, QLinearGradient, QConicalGradient
 from Qt.QtGui import QPixmap, QImage, QPolygonF, QDrag
 
-from tpDcc.dcc import dialog
-from tpDcc.managers import resources
-from tpDcc.libs.python import python
-from tpDcc.libs.resources.core import color as core_color
-from tpDcc.libs.qt.core import base, utils, qtutils, contexts as qt_contexts
-from tpDcc.libs.qt.widgets import layouts, buttons, label, spinbox, dividers, panel, sliders
+from tp.core import dialog
+from tp.core.managers import resources
+from tp.common.resources import color as core_color
+from tp.common.python import helpers
+from tp.common.qt import base, utils, qtutils, contexts as qt_contexts
+from tp.common.qt.widgets import layouts, buttons, label, spinbox, dividers, panel, sliders
 
 
 # TODO: Move all defualt colors into a configuration file that can be ready by any widget
@@ -1036,7 +1036,7 @@ class ColorWheel(QWidget, object):
         hue_stops = 24
         gradient_hue = QConicalGradient(0, 0, 0)
         if len(gradient_hue.stops()) < hue_stops:
-            for a in python.float_range(0.0, 1.0, 1.0 / (hue_stops - 1)):
+            for a in helpers.float_range(0.0, 1.0, 1.0 / (hue_stops - 1)):
                 gradient_hue.setColorAt(a, self._rainbow_from_hue(a))
             gradient_hue.setColorAt(1, self._rainbow_from_hue(0))
 
@@ -2332,7 +2332,7 @@ class ColorRgbSliders(base.BaseWidget, object):
             value_list.append(self._alpha_slider.mapped_value())
         if self._type == 'int':
             value_list = [utils.clamp(int(i), 0, 255) for i in value_list]
-        self._color = python.force_tuple(value_list)
+        self._color = helpers.force_tuple(value_list)
         self.colorChanged.emit(self._color)
 
     def _on_show_color_dialog(self):

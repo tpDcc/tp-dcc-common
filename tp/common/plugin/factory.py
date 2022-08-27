@@ -11,12 +11,12 @@ import os
 import re
 import sys
 import inspect
-import logging
 from distutils import version
 
-from tpDcc.libs.python import python, modules, path as path_utils, folder as folder_utils
+from tp.core import log
+from tp.common.python import helpers, modules, path as path_utils, folder as folder_utils
 
-logger = logging.getLogger('tpDcc-libs-python')
+logger = log.tpLogger
 
 
 class PluginFactory(object):
@@ -159,7 +159,7 @@ class PluginFactory(object):
         :return: int, total amount of registered plugins
         """
 
-        paths = python.force_list(paths)
+        paths = helpers.force_list(paths)
 
         total_plugins = 0
         visited = set()
@@ -359,7 +359,7 @@ class PluginFactory(object):
 
         # In Python 2 we check the existence of an __init__ file
         has_init = True
-        if python.is_python2():
+        if helpers.is_python2():
             has_init = False
             file_dir = os.path.dirname(file_path)
             for extension in ('.py', '.pyc'):
@@ -396,7 +396,7 @@ class PluginFactory(object):
 
         identifier = getattr(plugin, self._plugin_identifier)
 
-        predicate = inspect.ismethod if python.is_python2() else inspect.isfunction
+        predicate = inspect.ismethod if helpers.is_python2() else inspect.isfunction
         if predicate(identifier):
             return identifier()
 
@@ -411,7 +411,7 @@ class PluginFactory(object):
 
         identifier = getattr(plugin, self._version_identifier)
 
-        predicate = inspect.ismethod if python.is_python2() else inspect.isfunction
+        predicate = inspect.ismethod if helpers.is_python2() else inspect.isfunction
         if predicate(identifier):
             return str(identifier())
 

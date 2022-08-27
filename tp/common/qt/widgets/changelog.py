@@ -14,7 +14,7 @@ from collections import OrderedDict
 from Qt.QtCore import Qt
 from Qt.QtWidgets import QSizePolicy, QWidget, QLabel, QPushButton, QScrollArea
 
-from tpDcc.libs.qt.widgets import layouts, dialog, accordion
+from tp.common.qt.widgets import layouts, dialog, accordion
 
 
 class Changelog(dialog.BaseDialog, object):

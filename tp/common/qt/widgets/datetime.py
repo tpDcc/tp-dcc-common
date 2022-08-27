@@ -10,10 +10,11 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Property
 from Qt.QtWidgets import QDateEdit, QTimeEdit, QDateTimeEdit
 
-from tpDcc.libs.qt.core import mixin, theme
+from tp.common.qt import mixin
+from tp.common.resources import theme
 
 
-@mixin.theme_mixin
+@theme.mixin
 # @mixin.cursor_mixin
 class BaseDateTimeEdit(QDateTimeEdit, object):
     def __init__(self, parent=None):

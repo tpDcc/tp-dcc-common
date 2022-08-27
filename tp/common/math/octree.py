@@ -7,7 +7,7 @@ Implementation of an octree data structure
 
 from __future__ import print_function, division, absolute_import
 
-from tpDcc.libs.math.core import bbox
+from tp.common.math import bbox
 
 
 class Octree(object):

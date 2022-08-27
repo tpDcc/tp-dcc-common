@@ -11,9 +11,9 @@ from Qt.QtCore import Qt, Signal, QObject, QSize, QTimer, QPoint
 from Qt.QtWidgets import QWidget, QStyle
 from Qt.QtGui import QFont, QCursor
 
-from tpDcc import dcc
-from tpDcc.libs.resources.core import icon
-from tpDcc.libs.qt.widgets import layouts, dialog, parsers, label
+from tp.core import dcc
+from tp.common.resources import icon
+from tp.common.qt.widgets import layouts, dialog, parsers, label
 
 EXPANDED_TOOLTIP_INJECTOR_ATTRIBUTE = '_expandedTooltips_'
 

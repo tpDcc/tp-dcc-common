@@ -104,7 +104,7 @@ class StyleSheet(object):
 
         if options:
             keys = options.keys()
-            if utils.is_python2():
+            if helpers.is_python2():
                 keys.sort(key=len, reverse=True)
             else:
                 keys = sorted(keys, key=len, reverse=True)

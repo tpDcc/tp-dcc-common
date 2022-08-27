@@ -11,7 +11,7 @@ from Qt.QtCore import Qt, Property, QRect
 from Qt.QtWidgets import QCheckBox, QStylePainter, QStyleOption
 from Qt.QtGui import QColor, QPainter, QBrush
 
-from tpDcc.libs.qt.core import animation, contexts as qt_contexts
+from tp.common.qt import animation, contexts as qt_contexts
 
 
 # @mixin.cursor_mixin

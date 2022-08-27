@@ -10,12 +10,12 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt, Signal
 from Qt.QtWidgets import QSizePolicy
 
-from tpDcc.managers import resources
-from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import layouts, buttons
+from tp.core.managers import resources
+from tp.common.qt import base
+from tp.common.qt.widgets import layouts, buttons
 
 
-class SaveFileWidet(base.DirectoryWidget):
+class SaveFileWidget(base.DirectoryWidget):
 
     fileChanged = Signal()
 
@@ -25,7 +25,7 @@ class SaveFileWidet(base.DirectoryWidget):
 
         self._data_class = None
 
-        super(SaveFileWidet, self).__init__(parent=parent)
+        super(SaveFileWidget, self).__init__(parent=parent)
 
         self._tip = self.TIP
         if self._tip:
@@ -42,7 +42,7 @@ class SaveFileWidet(base.DirectoryWidget):
         return main_layout
 
     def ui(self):
-        super(SaveFileWidet, self).ui()
+        super(SaveFileWidget, self).ui()
 
         self.setContentsMargins(1, 1, 1, 1)
 
@@ -65,7 +65,7 @@ class SaveFileWidet(base.DirectoryWidget):
         self._load_button.clicked.connecxt(self._on_load)
 
     def set_directory(self, directory, data_class=None):
-        super(SaveFileWidet, self).set_directory(directory)
+        super(SaveFileWidget, self).set_directory(directory)
 
         if data_class:
             self._data_class = data_class

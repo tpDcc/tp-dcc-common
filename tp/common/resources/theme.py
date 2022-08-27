@@ -149,12 +149,13 @@ class Theme(QObject, object):
 
     def _load_theme_data_from_file(self, theme_file):
         """
-        Internal function that laods file data from given file
+        Internal function that load file data from given file
         :param theme_file: str
         :return: dict
         """
 
         if not theme_file or not os.path.isfile(theme_file):
+            logger.warning('Was not possible to load theem from file: {}'.format(theme_file))
             return
 
         try:

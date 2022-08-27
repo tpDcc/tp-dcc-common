@@ -17,12 +17,12 @@ from Qt.QtWidgets import QApplication, QGroupBox, QDesktopWidget, QDialog, QStat
 from Qt.QtWidgets import QGraphicsScene, QFileIconProvider, QListWidgetItem, QMessageBox, QInputDialog
 from Qt.QtWidgets import QWidget, QLabel, QFrame, QPushButton, QSlider, QLineEdit, QComboBox, QCheckBox, QRadioButton
 
-from tpDcc import dcc
-from tpDcc.managers import resources
-from tpDcc.abstract import dialog as abstract_dialog
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.core import qtutils, animation, dragger, resizers
-from tpDcc.libs.qt.widgets import layouts, dividers
+from tp.core import dcc
+from tp.core.managers import resources
+from tp.core.abstract import dialog as abstract_dialog
+from tp.common.resources import theme
+from tp.common.qt import qtutils, animation, dragger, resizers
+from tp.common.qt.widgets import layouts, dividers
 
 
 class BaseDialog(QDialog, abstract_dialog.AbstractDialog):
@@ -580,7 +580,7 @@ class BaseFileFolderDialog(BaseDialog, abstract_dialog.AbstractFileFolderDialog)
     def ui(self):
         super(BaseFileFolderDialog, self).ui()
 
-        from tpDcc.libs.qt.widgets import directory
+        from tp.common.qt.widgets import directory
 
         self.places = dict()
 

@@ -396,18 +396,13 @@ class WindowDragger(QFrame, object):
         Internal callback function that is called when the user clicks on close button
         """
 
-        closed = False
-        if hasattr(self._window, 'WindowId'):
-            closed = tools.ToolsManager().close_tool(self._window.WindowId, force=False)
-
-        if not closed:
-            if hasattr(self._window, 'docked'):
-                if self._window.docked():
-                    self._window.fade_close()
-                else:
-                    self.window().fade_close()
-            else:
+        if hasattr(self._window, 'docked'):
+            if self._window.docked():
                 self._window.fade_close()
+            else:
+                self.window().fade_close()
+        else:
+            self._window.fade_close()
 
 
 class DialogDragger(WindowDragger, object):

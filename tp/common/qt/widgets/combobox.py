@@ -10,8 +10,8 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Signal, Property, QPoint, QEvent
 from Qt.QtWidgets import QSizePolicy, QComboBox
 
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.core import formatters
+from tp.common.qt import formatters
+from tp.common.resources import theme
 
 
 @theme.mixin

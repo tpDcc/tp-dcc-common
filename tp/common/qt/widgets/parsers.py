@@ -8,10 +8,10 @@ Module that contains implementation for custom PySide/PyQt windows
 from Qt.QtWidgets import QLabel
 from Qt.QtGui import QFont
 
-from tpDcc.libs.python import python
-from tpDcc.libs.qt.widgets import gif
+from tp.common.python import helpers
+from tp.common.qt.widgets import gif
 
-if python.is_python2():
+if helpers.is_python2():
     from HTMLParser import HTMLParser
 else:
     from html.parser import HTMLParser

@@ -10,18 +10,17 @@ from __future__ import print_function, division, absolute_import
 import re
 import sys
 import string
-import logging
 
 from Qt.QtCore import Qt, Signal, QRect, QSize, QRegExp, QStringListModel, QFile
 from Qt.QtWidgets import QWidget, QCompleter, QTextEdit, QPlainTextEdit, QShortcut
 from Qt.QtGui import QFont, QColor, QPainter, QTextCursor, QTextCharFormat, QTextOption, QTextFormat, QSyntaxHighlighter
 from Qt.QtGui import QKeySequence
 
-from tpDcc import dcc
-from tpDcc.libs.python import python, fileio, code, folder as folder_utils, path as path_utils
-from tpDcc.libs.qt.core import qtutils
+from tp.core import log, dcc
+from tp.common.python import helpers, fileio, code, folder as folder_utils, path as path_utils
+from tp.common.qt import qtutils
 
-LOGGER = logging.getLogger('tpDcc-libs-qt')
+logger = log.tpLogger
 
 
 class PythonCompleter(QCompleter, object):
@@ -328,7 +327,7 @@ class PythonCompleter(QCompleter, object):
         if not paths:
             paths = sys.path
         if paths:
-            paths = python.force_list(paths)
+            paths = helpers.force_list(paths)
 
         for path in paths:
             fix_path = path_utils.normalize_path(path)
@@ -1075,7 +1074,7 @@ class CodeTextEdit(QPlainTextEdit, object):
 
     def _on_save(self):
         if not self.document().isModified():
-            LOGGER.warning('No changes to save in {}'.format(self._file_path))
+            logger.warning('No changes to save in {}'.format(self._file_path))
             return
 
         old_last_modified = self._last_modified

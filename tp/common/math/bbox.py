@@ -7,7 +7,7 @@ Module that contains bounding box implementation
 
 from __future__ import print_function, division, absolute_import
 
-from tpDcc.libs.math.core import vec3
+from tp.common.math import vec3
 
 
 class BoundingBox(object):

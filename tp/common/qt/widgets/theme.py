@@ -13,10 +13,10 @@ from Qt.QtCore import Qt
 from Qt.QtWidgets import QWidget, QScrollArea
 from Qt.QtGui import QColor, QPixmap, QIcon, QPainter
 
-from tpDcc.managers import resources
-from tpDcc.libs.resources.core import color
-from tpDcc.libs.qt.core import preferences
-from tpDcc.libs.qt.widgets import layouts, accordion, combobox, label, color as qt_color
+from tp.core.managers import resources
+from tp.common.resources import color
+from tp.common.qt import preferences
+from tp.common.qt.widgets import layouts, accordion, combobox, label, color as qt_color
 
 
 class ThemePreferenceWidget(preferences.CategoryWidgetBase, object):

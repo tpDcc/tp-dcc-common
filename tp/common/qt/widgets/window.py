@@ -77,7 +77,7 @@ class BaseWindow(QMainWindow, object):
                 self.WindowId = window_id
             else:
                 self._force_disable_saving = True
-                self.WindowId = str(uuid.uuid4())
+                self.WindowId = self.__class__.__name__
 
         self.setObjectName(str(self.WindowId))
         self.setWindowTitle(kwargs.get('title', self.WindowName))
@@ -594,6 +594,7 @@ class BaseWindow(QMainWindow, object):
         """
 
         current_theme = self.theme()
+
         if not current_theme:
             return
         current_theme.set_dpi(self.dpi())
@@ -763,6 +764,8 @@ class MainWindow(BaseWindow, object):
         if app:
             app.focusChanged.connect(self._on_change_focus)
 
+        self.clearedInstance.connect(self.close)
+
     # ============================================================================================================
     # PROPERTIES
     # ============================================================================================================
@@ -814,6 +817,9 @@ class MainWindow(BaseWindow, object):
     # ============================================================================================================
 
     def showEvent(self, event):
+
+        self.clear_window_instance(self.WindowId)
+
         if self.docked() != self._current_docked:
             self._current_docked = self.docked()
             self.dockChanged.emit(self._current_docked)

@@ -10,9 +10,9 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt, Signal, QPoint, QTimer, QEasingCurve, QPropertyAnimation, QAbstractAnimation
 from Qt.QtWidgets import QScrollArea
 
-from tpDcc import dcc
-from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import layouts, label, buttons, dividers
+from tp.core import dcc
+from tp.common.qt import base
+from tp.common.qt.widgets import layouts, label, buttons, dividers
 
 
 class SliderPanelPositions(object):
