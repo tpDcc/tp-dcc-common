@@ -93,3 +93,15 @@ BaseComboBox[combine=vertical][position=bottom]
     border-top-left-radius: 0;
     border-top-right-radius: 0;
 }
+
+BaseComboBox:disabled
+{
+    color: @disable_color;
+    background-color: @sub_background_color;
+}
+
+BaseComboBox::drop-down:disabled
+{
+    color: @disable_color;
+    background-color: @sub_background_color;
+}
