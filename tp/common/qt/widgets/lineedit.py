@@ -13,9 +13,9 @@ from Qt.QtCore import Qt, Signal, Property, QTimer
 from Qt.QtWidgets import QApplication, QLineEdit, QTextEdit
 from Qt.QtGui import QDoubleValidator, QIntValidator
 
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.core import contexts as qt_contexts
-from tpDcc.libs.qt.widgets import layouts, buttons, browser
+from tp.common.resources import theme
+from tp.common.qt import contexts as qt_contexts
+from tp.common.qt.widgets import layouts, buttons, browser
 
 
 @theme.mixin

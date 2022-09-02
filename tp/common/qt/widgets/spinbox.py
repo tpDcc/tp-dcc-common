@@ -11,9 +11,9 @@ from Qt.QtCore import Qt, Signal, Property, QPoint, QRect
 from Qt.QtWidgets import QSizePolicy, QFrame, QSpinBox, QDoubleSpinBox
 from Qt.QtGui import QColor, QPainter, QDoubleValidator
 
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.core import base, contexts as qt_contexts
-from tpDcc.libs.qt.widgets import layouts, lineedit, buttons, label
+from tp.common.resources import theme
+from tp.common.qt import base, contexts as qt_contexts
+from tp.common.qt.widgets import layouts, lineedit, buttons, label
 
 
 @theme.mixin

@@ -11,8 +11,8 @@ from Qt.QtCore import Qt, Signal, QSize
 from Qt.QtWidgets import QSplitter, QSplitterHandle
 from Qt.QtGui import QColor, QPainter, QBrush
 
-from tpDcc.managers import resources
-from tpDcc.libs.qt.widgets import buttons
+from tp.core.managers import resources
+from tp.common.qt.widgets import buttons
 
 
 class CollapsibleSplitter(QSplitter, object):

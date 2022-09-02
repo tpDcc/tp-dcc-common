@@ -155,7 +155,6 @@ class Theme(QObject, object):
         """
 
         if not theme_file or not os.path.isfile(theme_file):
-            logger.warning('Was not possible to load theem from file: {}'.format(theme_file))
             return
 
         try:

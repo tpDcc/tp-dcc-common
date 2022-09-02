@@ -7,21 +7,20 @@ Module that contains custom Qt tab bar widgets
 
 from __future__ import print_function, division, absolute_import
 
-import logging
-
 from Qt.QtCore import Qt, Signal, QPoint, QRect, QSize, QEvent, QRegExp, QMimeData
 from Qt.QtWidgets import QApplication, QPushButton, QTabBar, QLineEdit, QStyle, QStylePainter, QStyleOptionTab
 from Qt.QtGui import QCursor, QPixmap, QPainter, QMouseEvent, QDrag, QRegExpValidator
 
-from tpDcc.libs.python import name as naming
+from tp.core import log
+from tp.common.python import name as naming
 
-LOGGER = logging.getLogger('tpDcc-libs-qt')
+logger = log.tpLogger
 
-# ======================================================================
+# ======================================================================================================================
 
 nameRegExp = QRegExp('\\w+')
 
-# ======================================================================
+# ======================================================================================================================
 
 
 class EditableAddButton(QPushButton, object):
@@ -115,7 +114,7 @@ class EditableTabBar(QTabBar, object):
             self._editor.hide()
             for i in range(self.count()):
                 if self.tabText(i) == self._editor.text():
-                    LOGGER.warning('Impossible to rename category because exists a tab with the same name!')
+                    logger.warning('Impossible to rename category because exists a tab with the same name!')
                     return
             old_name = self.tabText(index)
             self.setTabText(index, self._editor.text())

@@ -11,11 +11,10 @@ from Qt.QtCore import Qt, Signal, Property, QPoint, QPointF, QRect, QSize
 from Qt.QtWidgets import QWidget, QTabWidget, QMainWindow
 from Qt.QtGui import QColor, QPalette
 
-from tpDcc import dcc
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.core import qtutils
-from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import layouts, window, tabbars, buttons, group, dividers, stack
+from tp.core import dcc
+from tp.common.resources import theme
+from tp.common.qt import qtutils, base
+from tp.common.qt.widgets import layouts, window, tabbars, buttons, group, dividers, stack
 
 
 class BaseTabWidget(QTabWidget, object):

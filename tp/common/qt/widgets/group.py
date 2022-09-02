@@ -11,11 +11,11 @@ from Qt.QtCore import Qt, Signal, Property
 from Qt.QtWidgets import QSizePolicy, QWidget, QFrame, QBoxLayout, QGroupBox, QButtonGroup
 from Qt.QtGui import QIcon
 
-from tpDcc.managers import resources
-from tpDcc.libs.python import decorators, python
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import layouts, buttons
+from tp.core.managers import resources
+from tp.common.python import helpers, decorators
+from tp.common.resources import theme
+from tp.common.qt import base
+from tp.common.qt.widgets import layouts, buttons
 
 
 class BaseGroup(QGroupBox, object):
@@ -365,7 +365,7 @@ class BaseButtonGroup(base.BaseWidget, object):
         :return: new added button
         """
 
-        if python.is_string(data_dict):
+        if helpers.is_string(data_dict):
             data_dict = {'text': data_dict}
         elif isinstance(data_dict, QIcon):
             data_dict = {'icon': data_dict}

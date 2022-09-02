@@ -10,9 +10,9 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt, Signal, QPoint, QEasingCurve, QPropertyAnimation, QParallelAnimationGroup
 from Qt.QtWidgets import QFrame, QStackedWidget
 
-from tpDcc.managers import resources
-from tpDcc.libs.qt.core import consts, qtutils, base, dpi, mixin
-from tpDcc.libs.qt.widgets import layouts, buttons, lineedit
+from tp.core.managers import resources
+from tp.common.qt import consts, qtutils, base, dpi, mixin
+from tp.common.qt.widgets import layouts, buttons, lineedit
 
 
 class SlidingStackedWidget(QStackedWidget, object):
