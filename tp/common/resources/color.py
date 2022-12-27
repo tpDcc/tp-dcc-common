@@ -260,9 +260,11 @@ def clamp(number, min_value=0.0, max_value=1.0):
 
 def string_is_hex(color_str):
     """
-    Returns whether or not given string is a valid hexadecimal color
-    :param color_str: str
-    :return: bool
+    Returns whether given string is a valid hexadecimal color
+
+    :param str color_str: color hexadecimal string.
+    :return: True if the given string corresponds to a hexadecimal color; False otherwise.
+    :rtype: bool
     """
 
     if color_str.startswith('#'):
@@ -276,11 +278,13 @@ def string_is_hex(color_str):
     return False
 
 
-def convert_2_hex(color):
+def convert_to_hex(color):
     """
-    Converts given color to hexadecimal value
-    :param color:
-    :return: str
+    Converts given color to hexadecimal value.
+
+    :param list(float) or QColor, color: color to convert to hexadecimal value.
+    :return: color as hexadecimal value.
+    :rtype: str
     """
 
     if helpers.is_string(color):
@@ -308,11 +312,14 @@ def convert_2_hex(color):
 
 def generate_color(primary_color, index):
     """
-    Generates a new color from the given one and with given index (between 1 and 10)
-    https://github.com/phenom-films/dayu_widgets/blob/master/dayu_widgets/utils.py
-    :param primary_color: base color (RRGGBB)
-    :param index: color step from 1 (light) to 10 (dark)
-    :return: out color Color
+    Generates a new color from the given one and with given index (between 1 and 10).
+
+    :param list(float) or QColor primary_color: base color (RRGGBB)
+    :param int index: color step from 1 (light) to 10 (dark)
+    :return: new color generated from the primary color
+    :rtype: QColor
+
+    .. seealso:: https://github.com/phenom-films/dayu_widgets/blob/master/dayu_widgets/utils.py
     """
 
     hue_step = 2
@@ -373,7 +380,16 @@ def string_from_color(color, alpha):
     # color.name()+QStringLiteral("%1").arg(color.alpha(), 2, 16, QChar('0'));
 
 
-def color_from_string(string, alpha):
+def color_from_string(string, alpha=True):
+    """
+    Returns a color based on the given name.
+
+    :param str string: color name.
+    :param bool alpha: whether to take alpha into consideration.
+    :return: color from given name.
+    :rtype: QColor
+    """
+
     xs = string.strip()
     regex = QRegExp(REGEX_QCOLOR)
     match = regex.exactMatch(xs)

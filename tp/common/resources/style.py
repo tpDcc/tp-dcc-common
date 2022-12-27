@@ -2,84 +2,105 @@
 # -*- coding: utf-8 -*-
 
 """
-Module that contains style implementation
+Module that contains custom style implementation
+This custom stylesheet allow us to easily define custom properties (without the hassle of using Qt properties)
 """
 
 from __future__ import print_function, division, absolute_import
 
-import os
 import re
+import string
 
-from tp.core.managers import resources
-from tp.common.python import helpers, color
-from tp.common.resources import utils
+from tp.common.python import helpers, path
+from tp.common.resources import theme
+
+
+class StyleTemplate(string.Template):
+    """
+    Style template that useful to replace specific style code on runtime.
+    """
+
+    delimiter = '@'
+    idpattern = r'[_a-z][_a-z0-9]*'
 
 
 class StyleSheet(object):
+    """
+    Base style class
+    Implements an include functionality, so in your style files you can use #include to include other style
+    files. The path must be defined relative to the current style path.
+    """
 
-    EXTENSION = 'css'
+    EXTENSION = 'qss'
+
+    def __init__(self, stylesheet=''):
+        super(StyleSheet, self).__init__()
+
+        self._data = ''                         # stores the style final format data as string
+        self._original_data = stylesheet        # stores original stylesheet string (without formatting)
+
+    def __repr__(self):
+        return str(self.data)
+
+    # =================================================================================================================
+    # PROPERTIES
+    # =================================================================================================================
+
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, value):
+        self._data = str(value)
+
+    # =================================================================================================================
+    # CLASS METHODS
+    # =================================================================================================================
 
     @classmethod
-    def from_path(cls, path, **kwargs):
+    def from_path(cls, style_path, **kwargs):
         """
-        Returns stylesheet from given path
-        :param path: str
-        :param kwargs: dict
-        :return: StyleSheet
+        Returns stylesheet from given path.
+
+        :param str style_path: style path
+        :param dict, kwargs: extra arguments used to format the style read from path
+        :return: StyleSheet instance object
+        :rtype: StyleSheet
         """
 
-        stylesheet = cls()
-        data = stylesheet.read(path)
-        data = StyleSheet.include_paths(path, data)
-        data = StyleSheet.format(data, **kwargs)
-        stylesheet.set_data(data)
+        data = cls.read(style_path)
+        stylesheet = cls(data)
+        data = cls.include_paths(style_path, data)
+        data = cls.format(data, **kwargs)
+        stylesheet.data = data
 
         return stylesheet
 
     @classmethod
-    def from_text(cls, text, options=None):
+    def include_paths(cls, style_path, data):
         """
-        Returns stylesheet from given text and options
-        :param text: str
-        :param options: dict
-        :return: StyleSheet
-        """
+        Checks for #include directives in the style and replaces those includes with the contents of those included
+        files.
 
-        stylesheet = cls()
-        data = stylesheet.format(text, options=options)
-        stylesheet.set_data(data)
-
-        return stylesheet
-
-    @staticmethod
-    def read(path):
-        """
-        Reads style data from given path
-        :param path: str
-        :return: str
+        :param str style_path: style path.
+        :param str data: str, data of the style.
+        :return: data with the #include directives replaced.
+        :rtype: str
         """
 
-        data = ''
-        if path and os.path.isfile(path):
-            with open(path, 'r') as f:
-                data = f.read()
-
-        return data
-
-    @classmethod
-    def include_paths(cls, file_path, data):
-        if not file_path or not os.path.isfile(file_path):
+        if not path.is_file(style_path):
             return data
 
-        file_dir = os.path.dirname(file_path)
+        file_dir = path.dirname(style_path)
         included_data = list()
         for line in data.split('\n'):
             if not line.startswith('#include '):
                 included_data.append(line)
                 continue
             file_name_to_include = line.replace('#include ', '').replace('\r', '')
-            file_to_include = os.path.abspath(os.path.join(file_dir, file_name_to_include))
-            if not os.path.isfile(file_to_include):
+            file_to_include = path.get_absolute_path(file_name_to_include, file_dir)
+            if not path.is_file(file_to_include):
                 continue
 
             load_data = cls.read(file_to_include)
@@ -93,77 +114,60 @@ class StyleSheet(object):
         return '\n'.join(included_data)
 
     @classmethod
-    def format(cls, data=None, options=None, dpi=1, **kwargs):
+    def format(cls, data=None, dpi_value=1, **kwargs):
         """
-        Returns style with proper format
-        :param data: str
-        :param options: dict
-        :param dpi: float
-        :return: str
+        Returns style with proper format. Replaces all user defined attributes with the attributes from theme.
+
+        :param str data: style data.
+        :param dict attributes: dictionary that contains all user attributes defined by style theme.
+        :param float dpi_value: dpi value defined in theme.
+        :return: stylesheet data ready to be applied.
+        :rtype: str
         """
 
-        if options:
-            keys = options.keys()
-            if helpers.is_python2():
-                keys.sort(key=len, reverse=True)
-            else:
-                keys = sorted(keys, key=len, reverse=True)
-            for key in keys:
-                key_value = options[key]
-                str_key_value = str(key_value)
-                option_value = str(key_value)
-                if str_key_value.startswith('@^'):
-                    option_value = str(utils.dpi_scale(int(str_key_value[2:])))
-                elif str_key_value.startswith('^'):
-                    option_value = str(utils.dpi_scale(int(str_key_value[1:])))
-                elif 'icon' in key:
-                    theme_name = kwargs.get('theme_name', 'default') or 'default'
-                    resource_path = resources.get('icons', theme_name, str(key_value))
-                    if resource_path and os.path.isfile(resource_path):
-                        option_value = resource_path
-                elif color.string_is_hex(str_key_value):
-                    try:
-                        color_list = color.hex_to_rgba(str_key_value)
-                        option_value = 'rgba({}, {}, {}, {})'.format(
-                            color_list[0], color_list[1], color_list[2], color_list[3])
-                    except ValueError:
-                        # This exception will be raised if we try to convert an attribute that is not a color.
-                        option_value = key_value
+        keys = list(kwargs.keys())
+        if helpers.is_python2():
+            keys.sort(key=len, reverse=True)
+        else:
+            keys = sorted(keys, key=len, reverse=True)
 
-                data = data.replace('@{}'.format(key), option_value)
+        for key in keys:
+            option_value = theme.solve_value(kwargs, key)
+            option_key = (key if key.startswith('@') else '@{}'.format(key)).upper()
+            data = data.replace(str(option_key), str(option_value))
 
+        # dpi replacement
         re_dpi = re.compile('[0-9]+[*]DPI')
         new_data = list()
-
         for line in data.split('\n'):
             dpi_ = re_dpi.search(line)
             if dpi_:
-                new = dpi_.group().replace('DPI', str(dpi))
+                new = dpi_.group().replace('DPI', str(dpi_value))
                 val = int(eval(new))
                 line = line.replace(dpi_.group(), str(val))
             new_data.append(line)
 
+        # each line of the style ends with end of line
         data = '\n'.join(new_data)
 
         return data
 
-    def __init__(self):
-        super(StyleSheet, self).__init__()
+    # =================================================================================================================
+    # STATIC METHODS
+    # =================================================================================================================
 
-        self._data = ''
-
-    def data(self):
+    @staticmethod
+    def read(style_path):
         """
-        Returns style data
-        :return: str
-        """
-
-        return self._data
-
-    def set_data(self, data):
-        """
-        Sets style data
-        :param data: str
+        Reads style data from given path.
+        :param str style_path: style path
+        :return: data contained in the style file
+        :rtype: str
         """
 
-        self._data = data
+        data = ''
+        if path.is_file(style_path):
+            with open(style_path, 'r') as f:
+                data = f.read()
+
+        return data

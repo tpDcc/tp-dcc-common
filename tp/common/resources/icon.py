@@ -249,32 +249,48 @@ def colorize_icon(icon, size=None, color=(255, 255, 255), overlay_icon=None, ove
     return Icon(pixmap)
 
 
-def colorize_layered_icon(icons, size, colors=None, icon_scaling=None, tint_color=None,
-                          tint_composition=QPainter.CompositionMode_Plus, grayscale=False):
+def colorize_layered_icon(
+        icons, size=16, colors=None, scaling=None, tint_color=None, composition=None, grayscale=False):
     """
-    Layers multiple icons with various colors into one icon
-    :param icons:
-    :param size:
-    :param colors:
-    :param icon_scaling:
-    :param tint_color:
-    :param tint_composition:
-    :param grayscale:
+    Layers multiple icons with various colors into one icon.
+
+    :param list(QIcon) icons: list of icons to colorize.
+    :param float size: icon size
+    :param list colors: list of icon colors.
+    :param list(float, float) scaling: icon scaling.
+    :param list(float) or str or QColor tint_color: icon tint color used to colorize.
+    :param QPainter.Composition composition: layer composition mode.
+    :param bool grayscale: whether to grayscale icons or not.
     :return:
     """
+
+    # import here to avoid cyclic imports
+    from tp.common import resources
+    from tp.common.qt import dpi
 
     if not icons:
         return
 
-    icons = helpers.force_list(icons)
+    if helpers.is_string(icons):
+        icons = [icons]
+    elif isinstance(icons, list):
+        icons = list(icons)
+
+    if isinstance(scaling, list):
+        scaling = list(scaling)
+
+    if not isinstance(colors, list):
+        colors = [colors]
+    else:
+        colors = list(colors)
 
     default_size = 1
-    size = utils.dpi_scale(size)
+    size = dpi.dpi_scale(size)
 
-    # Create copies of the lists
-    icons = list(icons)
-    icon_scaling = helpers.force_list(icon_scaling)
-    colors = helpers.force_list(colors)
+    # create copies of the lists
+    icons = helpers.force_list(icons)
+    icons = [resources.icon(icon) if helpers.is_string(icon) else icon for icon in icons]
+    icon_scaling = helpers.force_list(scaling)
 
     if colors is None or (len(icons) > len(colors)):
         colors = colors or list()
@@ -289,24 +305,27 @@ def colorize_layered_icon(icons, size, colors=None, icon_scaling=None, tint_colo
     orig_size = icon_largest.availableSizes()[0] if icon_largest.availableSizes() else 1.0
     col = colors.pop(0)
     scale = icon_scaling.pop(0)
-    if col is not None:
-        pixmap = px.colorize_pixmap(icon_largest.pixmap(orig_size * scale), col)
-    else:
-        pixmap = icon_largest.pixmap(orig_size * scale)
 
-    for i in range(len(icons)):
+    if col is not None:
+        icon_pixmap = px.colorize_pixmap(icon_largest.pixmap(orig_size * scale), col)
+    else:
+        icon_pixmap = icon_largest.pixmap(orig_size * scale)
+
+    for i, _icon in enumerate(icons):
+        if _icon is None:
+            continue
         overlay_pixmap = icons[i].pixmap(orig_size * icon_scaling[i])
-        px.overlay_pixmap(pixmap, overlay_pixmap, colors[i])
+        px.overlay_pixmap(icon_pixmap, overlay_pixmap, colors[i])
 
     if tint_color is not None:
-        px.tint_pixmap(pixmap, tint_color, composition_mode=tint_composition)
+        px.tint_pixmap(icon_pixmap, tint_color, composition_mode=composition)
 
-    pixmap = pixmap.scaled(QSize(size, size), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+    icon_pixmap = icon_pixmap.scaled(QSize(size, size), Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
-    icon = Icon(pixmap)
+    icon = Icon(icon_pixmap)
     if grayscale:
-        pixmap = px.grayscale_pixmap(pixmap)
-        icon = Icon(pixmap)
+        icon_pixmap = px.grayscale_pixmap(icon_pixmap)
+        icon = Icon(icon_pixmap)
         icon.addPixmap(icon.pixmap(size, QIcon.Disabled))   # TODO: Use tint instead
 
     return icon
