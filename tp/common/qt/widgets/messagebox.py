@@ -10,11 +10,11 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt, QEvent
 from Qt.QtWidgets import QSizePolicy, QFrame, QDialog, QDialogButtonBox
 
-from tpDcc import dcc
-from tpDcc.libs.python import python
-from tpDcc.libs.resources.core import theme
-from tpDcc.libs.qt.core import animation, qtutils
-from tpDcc.libs.qt.widgets import layouts, label, checkbox, lineedit
+from tp.core import dcc
+from tp.common.python import helpers
+from tp.common.resources import theme
+from tp.common.qt import qtutils, animation
+from tp.common.qt.widgets import layouts, labels, checkboxes, lineedits
 
 
 def create_message_box(parent, title, text, width=None, height=None, buttons=None, header_pixmap=None,
@@ -79,7 +79,7 @@ def show_message_box(parent, title, text, width=None, height=None, buttons=None,
     :return: MessageBox
     """
 
-    if python.is_string(enable_dont_show_checkbox):
+    if helpers.is_string(enable_dont_show_checkbox):
         enable_dont_show_checkbox = enable_dont_show_checkbox == 'true'
 
     clicked_btn = None
@@ -223,7 +223,7 @@ class MessageBox(QDialog, object):
 
         parent = self.parent()
         self._frame = None
-        if parent and parent != dcc.get_main_window():
+        if parent and parent != dcc.main_window():
             parent.installEventFilter(self)
             self._frame = QFrame(parent)
             self._frame.setStyleSheet('background-color: rgba(25, 25, 25, 150);')
@@ -239,7 +239,7 @@ class MessageBox(QDialog, object):
         self._header.setObjectName('messageBoxHeaderFrame')
         self._header.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        self._icon = label.BaseLabel(parent=self._header)
+        self._icon = labels.BaseLabel(parent=self._header)
         self._icon.hide()
         self._icon.setFixedHeight(32)
         self._icon.setFixedHeight(32)
@@ -247,7 +247,7 @@ class MessageBox(QDialog, object):
         self._icon.setAlignment(Qt.AlignTop)
         self._icon.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
 
-        self._title = label.BaseLabel(parent=self._header)
+        self._title = labels.BaseLabel(parent=self._header)
         self._title.setObjectName('messageBoxHeaderLabel')
         self._title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
@@ -261,7 +261,7 @@ class MessageBox(QDialog, object):
         self._body.setObjectName('messageBoxBody')
         self._body.setLayout(body_layout)
 
-        self._message = label.BaseLabel(parent=self._body)
+        self._message = labels.BaseLabel(parent=self._body)
         self._message.setWordWrap(True)
         self._message.setMinimumHeight(15)
         self._message.setAlignment(Qt.AlignLeft)
@@ -271,7 +271,7 @@ class MessageBox(QDialog, object):
         body_layout.setContentsMargins(15, 15, 15, 15)
 
         if enable_input_edit:
-            self._input_edit = lineedit.BaseLineEdit(parent=self._body)
+            self._input_edit = lineedits.BaseLineEdit(parent=self._body)
             self._input_edit.setObjectName('messageBoxInputEdit')
             self._input_edit.setMinimumHeight(32)
             self._input_edit.setFocus()

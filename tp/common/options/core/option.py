@@ -170,7 +170,7 @@ class Option(base.BaseWidget, object):
         for i in range(item_count):
             item = self.parent().child_layout.itemAt(i)
             widget = item.widget()
-            widget_label = widget.get_name()
+            widget_label = widget.name()
             found.append(widget_label)
 
         return found

@@ -13,6 +13,7 @@ import contextlib
 from Qt.QtWidgets import QApplication, QWidget
 
 from tp.core import dcc, window
+from tp.common.qt import qtutils
 
 
 @contextlib.contextmanager
@@ -50,3 +51,15 @@ def show_window(widget):
         new_window.adjustSize()
         new_window.show()
         yield new_window
+
+@contextlib.contextmanager
+def waiting_cursor():
+    """
+    Custom Python context manager that allow to enable waiting cursor while a function is being processed.
+    """
+
+    qtutils.set_cursor(Qt.WaitCursor)
+    try:
+        yield
+    finally:
+        qtutils.set_cursor(Qt.ArrowCursor)

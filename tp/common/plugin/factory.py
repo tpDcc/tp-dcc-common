@@ -12,8 +12,12 @@ import re
 import sys
 import inspect
 from distutils import version
+try:
+    from inspect import getfullargspec
+except ImportError:
+    from inspect import getargspec as getfullargspec
 
-from tp.core import log
+from tp.core import log, dcc
 from tp.common.python import helpers, modules, path as path_utils, folder as folder_utils
 
 logger = log.tpLogger
@@ -50,7 +54,7 @@ class PluginFactory(object):
     def __init__(self, interface, paths=None, package_name=None, plugin_id=None, version_id=None, env_var=None):
         """
 
-        :param interface: Abstract class to use when searching for plugins within the registered paths.
+        :param interfaces: Abstract class to use when searching for plugins within the registered paths.
         :param paths: list(str), list of absolute paths to search for plugins.
         :param plugin_id: str, plugin identifier to distinguish between different plugins. If not given, plugin
             class name will be used
@@ -65,6 +69,7 @@ class PluginFactory(object):
 
         self._plugins = dict()
         self._registered_paths = dict()
+        self._loaded_plugins = dict()
 
         self.register_paths(paths, package_name=package_name)
         if env_var:
@@ -74,11 +79,47 @@ class PluginFactory(object):
         return '[{} - Identifier: {}, Plugin Count: {}]'.format(
             self.__class__.__name__, self._plugin_identifier, len(self._plugins))
 
+    # =================================================================================================================
+    # CLASS METHODS
+    # =================================================================================================================
+
+    @classmethod
+    def get_regex_folder_validator(cls):
+        """
+        Returns regex validator for plugin folder directories.
+        """
+
+        dcc_name = dcc.get_name()
+        all_dccs = dcc.Dccs.ALL
+        dcc_exclude = ''
+        for _dcc in all_dccs:
+            if _dcc == dcc_name:
+                continue
+            dcc_exclude += '(?!{})'.format(_dcc)
+
+        return re.compile('^((?!__pycache__)' + dcc_exclude + '(?!plugins)(?!vendors)(?!art)(?!src).)*$')
+
+    @classmethod
+    def get_regex_file_validator(cls):
+        """
+        Returns regex validator for plugin files
+        """
+
+        return re.compile(r'([a-zA-Z_].*)(\.py$)')
+
+    # =================================================================================================================
+    # PROPERTIES
+    # =================================================================================================================
+
+    @property
+    def loaded_plugins(self):
+        return self._loaded_plugins
+
     # ============================================================================================================
     # BASE
     # ============================================================================================================
 
-    def register_path(self, path, package_name=None, mechanism=PluginLoadingMechanism.GUESS):
+    def register_path(self, path_to_register, package_name=None, mechanism=PluginLoadingMechanism.GUESS):
         """
         Registers a search path within the factory. The factory will immediately being searching recursively withing
         this location for any plugin.
@@ -88,19 +129,19 @@ class PluginFactory(object):
         :return: int, total amount of registered plugins
         """
 
-        if not path or not os.path.isdir(path):
-            return 0
+        if not path_utils.exists(path_to_register):
+            return 0, list()
 
         package_name = package_name or 'tpDcc'
 
         # Regardless of what is found in the given path, we store it
-        self._registered_paths.setdefault(package_name, dict()).setdefault(path, dict())
-        self._registered_paths[package_name][path] = mechanism
+        self._registered_paths.setdefault(package_name, dict()).setdefault(path_to_register, dict())
+        self._registered_paths[package_name][path_to_register] = mechanism
 
         current_plugins_count = len(self._plugins)
 
         file_paths = list()
-        for root, _, files in folder_utils.walk_level(path):
+        for root, _, files in folder_utils.walk_level(path_to_register):
             if not self.REGEX_FOLDER_VALIDATOR.match(root):
                 continue
 
@@ -140,11 +181,11 @@ class PluginFactory(object):
                         if item == self._interface:
                             continue
                         if issubclass(item, self._interface):
-                            item.ROOT = path
+                            item.ROOT = path_to_register
                             item.PATH = file_path
                             self._plugins.setdefault(package_name, list())
                             self._plugins[package_name].append(item)
-            except BaseException:
+            except BaseException as exc:
                 logger.debug('', exc_info=True)
 
         return len(self._plugins) - current_plugins_count
@@ -266,6 +307,7 @@ class PluginFactory(object):
         :param plugin_version: int or float, version of the plugin you want. If factory has no versioning identifier
             specified this argument has no effect.
         :return: Plugin
+        :rtype: type
         """
 
         if package_name and package_name not in self._plugins:
@@ -306,6 +348,105 @@ class PluginFactory(object):
             return None
 
         return versions[str(plugin_version)]
+
+    def get_loaded_plugin_from_id(self, plugin_id, package_name=None, plugin_version=None):
+        """
+        Retrieves the plugin with given plugin identifier. If you require a specific version of a plugin (in a
+        scenario where there are multiple plugins with the same identifier) this can also be specified
+        :param plugin_id: str, identifying value of the plugin you want to retrieve
+        :param package_name: str, package name current registered plugins will belong to.
+        :param plugin_version: int or float, version of the plugin you want. If factory has no versioning identifier
+            specified this argument has no effect.
+        :return: Plugin
+        """
+
+        if package_name and package_name not in self._loaded_plugins:
+            logger.error('Impossible to retrieve data from id: {} package: "{}" not registered!'.format(
+                plugin_id, package_name))
+            return None
+
+        if package_name:
+            matching_plugins = [plugin for plugin in self._loaded_plugins.get(
+                package_name, list()) if self._get_identifier(plugin) == plugin_id]
+        else:
+            matching_plugins = list()
+            for plugins in list(self._plugins.values()):
+                for plugin in plugins:
+                    if self._get_identifier(plugin) == plugin_id:
+                        matching_plugins.append(plugin)
+
+        if not matching_plugins:
+            logger.warning('No plugin with id "{}" found in package "{}"'.format(plugin_id, package_name))
+            return None
+
+        if not self._version_identifier:
+            return matching_plugins[0]
+
+        versions = {
+            self._get_version(plugin): plugin for plugin in matching_plugins
+        }
+        ordered_versions = [version.LooseVersion(str(v)) for v in list(versions.keys())]
+
+        # If not version given, we return the plugin with the highest value
+        if not plugin_version:
+            return versions[str(ordered_versions[0])]
+
+        plugin_version = version.LooseVersion(plugin_version)
+        if plugin_version not in ordered_versions:
+            logger.warning('No Plugin with id "{}" and version "{}" found in package "{}"'.format(
+                plugin_id, plugin_version, package_name))
+            return None
+
+        return versions[str(plugin_version)]
+
+    def load_plugin(self, plugin_id, package_name=None, **kwargs):
+        """
+        Loads a given plugin by the given name.
+
+        :param str plugin_id: id of the plugin to load.
+        :param dict kwargs: extra keyword arguments.
+        :return: instance of the loaded plugin.
+        :rtype: object or None
+        """
+
+        package_name = package_name or 'tpDcc'
+
+        plugin_class = self.get_plugin_from_id(plugin_id, package_name=package_name)
+        if not plugin_class:
+            return None
+
+        logger.debug('Loading plugin: {}'.format(plugin_id))
+        spec = getfullargspec(plugin_class.__init__)
+        try:
+            keywords = spec.kwonlyargs
+        except AttributeError:
+            keywords = spec.keywords
+        args = spec.args
+        if (args and "manager" in args) or (keywords and "manager" in keywords):
+            kwargs["manager"] = self
+        try:
+            plugin_instance = plugin_class(**kwargs)
+        except Exception:
+            logger.error("Failed to load plugin: {}".format(plugin_id), exc_info=True)
+            return None
+
+        self._loaded_plugins.setdefault(package_name, list())
+        plugin_instance.is_loaded = True
+        self._loaded_plugins[package_name].append(plugin_instance)
+
+        return plugin_instance
+
+    def load_all_plugins(self, package_name=None):
+        """
+        Loops over all registered plugin and loads them.
+        """
+
+        for pkg_name, plugin_classes in self._plugins.items():
+            if package_name and pkg_name != package_name:
+                continue
+            for plugin_class in plugin_classes:
+                plugin_id = self._get_identifier(plugin_class)
+                self.load_plugin(plugin_id, package_name=package_name)
 
     def unregister_path(self, path, package_name=None):
         """

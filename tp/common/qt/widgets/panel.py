@@ -12,7 +12,7 @@ from Qt.QtWidgets import QScrollArea
 
 from tp.core import dcc
 from tp.common.qt import base
-from tp.common.qt.widgets import layouts, label, buttons, dividers
+from tp.common.qt.widgets import layouts, labels, buttons, dividers
 
 
 class SliderPanelPositions(object):

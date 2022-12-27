@@ -110,7 +110,7 @@ class FileManager(object):
 
         from tp.common.python import path
 
-        dir_name = path.get_dirname(self.file_path)
+        dir_name = path.dirname(self.file_path)
 
         if not path.is_dir(dir_name):
             if warning_text is not None:
@@ -262,7 +262,7 @@ class FileVersion(object):
         self.file_path = file_path
         if file_path:
             self.filename = path.get_basename(directory=self.file_path)
-            self._path = path.get_dirname(file_path)
+            self._path = path.dirname(file_path)
             self._version_folder_name = '__version__'
             self._version_name = 'version'
             self._version_folder = None
@@ -566,7 +566,7 @@ class FileVersion(object):
         from tp.common.python import path
 
         if path.is_file(self.file_path):
-            dir_name = path.get_dirname(self.file_path)
+            dir_name = path.dirname(self.file_path)
             version_path = path.join_path(dir_name, self._version_folder_name)
         else:
             version_path = path.join_path(self.file_path, self._version_folder_name)
@@ -641,7 +641,7 @@ def create_file(filename, directory=None, make_unique=False):
     from tp.common.python import name, path, osplatform
 
     if directory is None:
-        directory = path.get_dirname(filename)
+        directory = path.dirname(filename)
         filename = path.get_basename(filename)
 
     filename = name.clean_file_string(filename)

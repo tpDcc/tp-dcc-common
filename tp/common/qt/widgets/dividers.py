@@ -10,8 +10,24 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import Qt
 from Qt.QtWidgets import QWidget, QFrame
 
-from tp.common.qt import qtutils
-from tp.common.qt.widgets import label, layouts
+from tp.common.qt import dpi
+from tp.common.qt.widgets import labels, layouts
+
+
+def divider(text='', orientation=Qt.Horizontal, alignment=Qt.AlignLeft, parent=None):
+    """
+    Returns divider widget
+
+    :param str text: optional divider text.
+    :param Qt.Orientation orientation: optional divider orientation.
+    :param Qt.Alignment alignment: optional divider alignment.
+    :param QWidget parent: optional parent widget.
+    :return: divider widget instance.
+    :rtype: Divider
+    """
+
+    new_divider = Divider(text=text, orientation=orientation, alignment=alignment, parent=parent)
+    return new_divider
 
 
 class Divider(QWidget, object):
@@ -40,7 +56,7 @@ class Divider(QWidget, object):
         main_layout = layouts.HorizontalLayout(spacing=0, margins=(0, 0, 0, 0))
         self.setLayout(main_layout)
 
-        self._label = label.BaseLabel().strong(True)
+        self._label = labels.BaseLabel().strong(True)
 
         first_line = QFrame()
         self._second_line = QFrame()
@@ -157,7 +173,7 @@ def get_horizontal_separator_widget(max_width=60, parent=None):
     v_div_w.setLayout(v_div_l)
     v_div = QFrame(parent=v_div_w)
     v_div.setObjectName('dividerSeparator')     # ID selector used by style
-    v_div.setMaximumHeight(qtutils.dpi_scale(max_width))
+    v_div.setMaximumHeight(dpi.dpi_scale(max_width))
     v_div.setFrameShape(QFrame.HLine)
     v_div.setFrameShadow(QFrame.Sunken)
     v_div_l.addWidget(v_div)
@@ -179,7 +195,7 @@ def get_vertical_separator_widget(max_height=30, parent=None):
     h_div_w.setLayout(h_div_l)
     h_div = QFrame(parent=h_div_w)
     h_div.setObjectName('dividerSeparator')         # ID selector used by style
-    h_div.setMaximumHeight(qtutils.dpi_scale(max_height))
+    h_div.setMaximumHeight(dpi.dpi_scale(max_height))
     h_div.setFrameShape(QFrame.VLine)
     h_div.setFrameShadow(QFrame.Sunken)
     h_div_l.addWidget(h_div)

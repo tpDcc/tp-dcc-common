@@ -232,8 +232,8 @@ class DataLibrary(object):
         return [
             os.path.join(os.path.dirname(os.path.dirname(__file__)), 'plugins'),
             os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data'),
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'dccs', dcc.client().get_name(), 'plugins'),
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'dccs', dcc.client().get_name(), 'data')
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'dccs', dcc.client().name(), 'plugins'),
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'dccs', dcc.client().name(), 'data')
         ]
 
     @classmethod
@@ -506,7 +506,7 @@ class DataLibrary(object):
 
         identifier = self.format_identifier(identifier)
 
-        dcc_name = dcc.client().get_name()
+        dcc_name = dcc.client().name()
 
         for data_plugin in self._data_plugins:
 
@@ -548,7 +548,7 @@ class DataLibrary(object):
         :return:
         """
 
-        dcc_name = dcc.client().get_name()
+        dcc_name = dcc.client().name()
 
         valid_plugins = list()
         all_plugins = self._data_factory.plugins(package_name=package_name)

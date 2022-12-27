@@ -8,8 +8,6 @@ Module that contains implementation for custom PySide/PyQt windows
 from __future__ import print_function, division, absolute_import
 
 import os
-import uuid
-import logging
 from collections import defaultdict
 
 from Qt.QtCore import Qt, Signal, QByteArray, QSettings
@@ -17,7 +15,7 @@ from Qt.QtWidgets import QApplication, QSizePolicy, QToolBar, QScrollArea, QMenu
 from Qt.QtWidgets import QMainWindow, QWidget, QFrame, QTabWidget, QTabBar
 
 from tp.core import log, dcc
-from tp.core.managers import resources
+from tp.core.managers import preferences, resources
 from tp.common.python import helpers, path, folder
 from tp.common.resources import theme
 from tp.common.qt import qtutils, animation, statusbar, dragger, resizers, settings as qt_settings
@@ -540,33 +538,33 @@ class BaseWindow(QMainWindow, object):
 
         theme_name = theme_name or self.settings().get('theme', 'default') if self._settings else 'default'
         theme_to_load = resources.theme(theme_name)
-        if not theme_to_load:
-            theme_to_load = theme.Theme()
-        if theme_settings:
-            theme_to_load.set_settings(theme_settings)
+        if theme_to_load:
+            if theme_settings:
+                theme_to_load.set_settings(theme_settings)
 
-        # def_settings = self.default_settings()
-        # def_theme_settings = def_settings.get('theme', dict())
-        # accent_color = self.settings().get('theme/accentColor') or def_theme_settings.get('accent_color')
-        # background_color = self.settings().get('theme/backgroundColor') or def_theme_settings.get('background_color')
-        # accent_color = 'rgb(%d, %d, %d, %d)' % accent_color.getRgb() if isinstance(
-        #     accent_color, QColor) else accent_color
-        # background_color = 'rgb(%d, %d, %d, %d)' % background_color.getRgb() if isinstance(
-        #     background_color, QColor) else background_color
-        #
-        # theme_settings = dict()
-        # if accent_color:
-        #     accent_color = color.convert_2_hex(accent_color)
-        #     theme_settings['accent_color'] = accent_color
-        # if background_color:
-        #     background_color = color.convert_2_hex(background_color)
-        #     theme_settings['background_color'] = background_color
-        #
-        # new_theme = self.set_theme_settings(theme_settings)
-
-        self.set_theme(theme_to_load)
-
-        return theme_to_load
+            # def_settings = self.default_settings()
+            # def_theme_settings = def_settings.get('theme', dict())
+            # accent_color = self.settings().get('theme/accentColor') or def_theme_settings.get('accent_color')
+            # background_color = self.settings().get('theme/backgroundColor') or def_theme_settings.get('background_color')
+            # accent_color = 'rgb(%d, %d, %d, %d)' % accent_color.getRgb() if isinstance(
+            #     accent_color, QColor) else accent_color
+            # background_color = 'rgb(%d, %d, %d, %d)' % background_color.getRgb() if isinstance(
+            #     background_color, QColor) else background_color
+            #
+            # theme_settings = dict()
+            # if accent_color:
+            #     accent_color = color.convert_2_hex(accent_color)
+            #     theme_settings['accent_color'] = accent_color
+            # if background_color:
+            #     background_color = color.convert_2_hex(background_color)
+            #     theme_settings['background_color'] = background_color
+            #
+            # new_theme = self.set_theme_settings(theme_settings)
+            self.set_theme(theme_to_load)
+        else:
+            theme_preferences = preferences.get_theme_preference_interface()
+            result = theme_preferences.stylesheet()
+            self.setStyleSheet(result.data)
 
     def theme(self):
         """
@@ -583,8 +581,8 @@ class BaseWindow(QMainWindow, object):
         """
 
         self._theme = theme
-        self._theme.updated.connect(self.reload_stylesheet)
-        self._theme.set_dpi(self.dpi())
+        # self._theme.updated.connect(self.reload_stylesheet)
+        # self._theme.set_dpi(self.dpi())
         self.reload_stylesheet()
         # self.themeUpdated.emit(self._theme)
 
@@ -593,14 +591,13 @@ class BaseWindow(QMainWindow, object):
         Reloads the stylesheet to the current theme
         """
 
-        current_theme = self.theme()
+        theme_preferences = preferences.get_theme_preference_interface()
+        result = theme_preferences.stylesheet(self.theme())
+        self.setStyleSheet(result.data)
 
-        if not current_theme:
-            return
-        current_theme.set_dpi(self.dpi())
-        stylesheet = current_theme.stylesheet()
-        self.setStyleSheet(stylesheet)
-        self.styleReloaded.emit(current_theme)
+        # current_theme.set_dpi(self.dpi())
+        # self.setStyleSheet(stylesheet)
+        # self.styleReloaded.emit(current_theme)
 
     # ============================================================================================================
     # TOOLBAR

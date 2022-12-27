@@ -126,13 +126,13 @@ class Project(base.BaseWidget):
 
         project_data = settings.JSONSettings()
         project_options = settings.JSONSettings()
-        project_dir = path.get_dirname(project_data_path)
+        project_dir = path.dirname(project_data_path)
         project_name = path.get_basename(project_data_path)
         project_data.set_directory(project_dir, project_name)
         project_options.set_directory(project_dir, 'options.json')
 
         project_name = project_data.get('name')
-        project_path = path.get_dirname(path.get_dirname(project_data_path))
+        project_path = path.dirname(path.dirname(project_data_path))
         project_image = project_data.get('image')
 
         LOGGER.debug('New Project found [{}]: {}'.format(project_name, project_path))

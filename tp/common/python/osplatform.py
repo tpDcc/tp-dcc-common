@@ -58,9 +58,11 @@ def get_platform():
 
 def get_home_directory(platform=None):
     """
-    Returns home folder in a platform independent way
-    :param platform: str
-    :return: str
+    Returns home folder in a platform independent way.
+
+    :param str or None platform:
+    :return: home directory.
+    :rtype: str
     """
 
     platform = platform or get_platform()
@@ -183,14 +185,15 @@ def set_env_var(name, value):
         print('{} | {} | name: {} | value: {}'.format(str(e), traceback.format_exc(), name, value))
 
 
-def get_env_var(name):
+def get_env_var(name, default=None):
     """
-    Returns the value of an environment variable
-    :param name: str, name of the environment variable
+    Returns the value of an environment variable.
+
+    :param str name: name of the environment variable.
+    :param any default: default value to return if env variable does not exists.
     """
 
-    if name in os.environ:
-        return os.environ[name]
+    return os.environ.get(name, default=default)
 
 
 def append_env_var(name, value):
@@ -206,6 +209,46 @@ def append_env_var(name, value):
         env_value += str(value)
     except Exception:
         pass
+
+    set_env_var(name=name, value=env_value)
+
+
+def remove_env_var(name):
+    """
+    Deletes environment variable.
+
+    :param str name: name of the environment to remove .
+    """
+
+    if name not in os.environ:
+        return
+
+    os.environ.pop(name, None)
+
+
+def append_path_env_var(name, value, skip_if_exists=True):
+    """
+    Append string path value to the end of the environment variable.
+
+    :param str name: name of the environment variable to set.
+    :param str value: value to initialize environment variable with, empty string by default.
+    :param bool skip_if_exists: whether env var should not be added if value already exists in env var.
+    """
+
+    env_value = get_env_var(name=name) or ''
+    if not env_value:
+        try:
+            env_value = str(value)
+        except Exception:
+            pass
+    else:
+        paths = env_value.split(os.pathsep)
+        if skip_if_exists and value in paths:
+            return
+        try:
+            env_value = env_value + os.pathsep + str(value)
+        except Exception:
+            pass
 
     set_env_var(name=name, value=env_value)
 

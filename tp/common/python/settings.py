@@ -250,7 +250,7 @@ class JSONSettings(FileSettings, object):
         if not self.file_path:
             return
 
-        settings_directory = path.get_dirname(self.file_path)
+        settings_directory = path.dirname(self.file_path)
         name = path.get_basename(self.file_path, with_extension=False)
         file_path = fileio.create_file(name + '.json', settings_directory)
         if not file_path:
@@ -269,7 +269,7 @@ class JSONSettings(FileSettings, object):
         if not self.file_path:
             return False
 
-        settings_directory = path.get_dirname(self.file_path)
+        settings_directory = path.dirname(self.file_path)
         name = path.get_basename(self.file_path, with_extension=False)
         file_path = path.join_path(settings_directory, name + '.json')
         if path.is_file(file_path):

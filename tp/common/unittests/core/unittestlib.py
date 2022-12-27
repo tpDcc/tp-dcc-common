@@ -57,7 +57,7 @@ def run_tests_from_command_line():
     Run the tests in Maya standalone mode
     """
 
-    raise NotImplementedError('run test from command line not implemented for current DCC: {}'.format(dcc.get_name()))
+    raise NotImplementedError('run test from command line not implemented for current DCC: {}'.format(dcc.name()))
 
 
 def run_tests(directories=None, test=None, test_suite=None):

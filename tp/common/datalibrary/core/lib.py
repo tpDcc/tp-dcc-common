@@ -47,7 +47,7 @@ def create_logger(dev=False):
 
     logging_config = os.path.normpath(os.path.join(os.path.dirname(os.path.dirname(__file__)), '__logging__.ini'))
 
-    logging.config.fileConfig(logging_config, disable_existing_loggers=False)
+    logging.config.fileConfig(logging_config, disable_existing_loggers=True)
     logger = logging.getLogger('tpDcc-libs-datalibrary')
     dev = os.getenv('TPDCC_DEV', dev)
     if dev:

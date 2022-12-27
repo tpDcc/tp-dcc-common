@@ -81,7 +81,7 @@ def rename_folder(directory, name, make_unique=False):
     if base_name == name:
         return
 
-    parent_path = path.get_dirname(directory=directory)
+    parent_path = path.dirname(directory=directory)
     rename_path = path.join_path(parent_path, name)
 
     if make_unique:
@@ -173,8 +173,7 @@ def move_folder(source_directory, target_directory, only_contents=False):
 
 def copy_directory_contents(path1, path2, *args, **kwargs):
     """
-    Copies all the contents of the given path1 to the folder path2. If path2 directory does not
-    exists, it will be created
+    Copies all the contents of the given path1 to the folder path2. If path2 directory does not exists, it will be created
     :param path1: str
     :param path2: str
     :param args:
@@ -185,10 +184,36 @@ def copy_directory_contents(path1, path2, *args, **kwargs):
     try:
         copy_tree(path1, path2, *args, **kwargs)
     except Exception:
-        logger.warning('Failed to move contents of {0} to {1}'.format(path1, path2))
+        logger.warning('Failed to move contents of {} to {}'.format(path1, path2))
         return False
 
     return True
+
+
+def copy_directory_contents_safe(source, target, skip_exists=True, overwrite_modified=False):
+    """
+    Copies the contents of one directory to another including sub-folders. Destination folder will be created if it
+    does not exist.
+
+    :param str source: source directory path.
+    :param str target: destination path.
+    :param bool skip_exists: whether skip file if it already exists.
+    :param bool overwrite_modified: whether to overwrite file if it exists but has been modified.
+    """
+
+    ensure_folder_exists(target)
+    for item in os.listdir(source):
+        s = os.path.join(source, item)
+        d = os.path.join(target, item)
+        if os.path.isdir(s):
+            copy_directory_contents_safe(s, d, skip_exists=skip_exists, overwrite_modified=overwrite_modified)
+        else:  # only copy files if it doesn't exit or has been modified
+            if skip_exists and not os.path.exists(d):
+                shutil.copy2(s, d)
+            elif overwrite_modified and os.path.exists(d) and os.stat(s).st_mtime - os.stat(d).st_mtime > 1:
+                shutil.copy2(s, d)
+            elif not skip_exists and not overwrite_modified:
+                shutil.copy2(s, d)
 
 
 def delete_folder(folder_name, directory=None):
@@ -233,7 +258,7 @@ def clean_folder(directory):
     from tp.common.python import path, fileio, folder
 
     base_name = path.get_basename(directory=directory)
-    dir_name = path.get_dirname(directory=directory)
+    dir_name = path.dirname(directory=directory)
 
     if path.is_dir(directory):
         try:

@@ -1100,7 +1100,7 @@ class FileTreeWidget(TreeWidget, object):
             item_path = self.get_tree_item_path_string(self._current_item)
             item_path = path.join_path(self._directory, item_path)
             if path.is_file(item_path):
-                item_path = path.get_dirname(item_path)
+                item_path = path.dirname(item_path)
                 current_item = self._current_item.parent()
 
         if not current_item:
@@ -1125,7 +1125,7 @@ class FileTreeWidget(TreeWidget, object):
         item = self._current_item
         item_path = self.get_item_directory(item)
         name = path.get_basename(item_path)
-        item_directory = path.get_dirname(item_path)
+        item_directory = path.dirname(item_path)
 
         if path.is_dir(item_path):
             folder.delete_folder(name, item_directory)

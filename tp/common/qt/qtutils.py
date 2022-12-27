@@ -18,22 +18,27 @@ from tp.common.python import helpers
 from tp.common.qt import consts
 from tp.common.resources import color
 
-LOGGER = log.tpLogger
+logger = log.tpLogger
 
 QT_ERROR_MESSAGE = 'Qt.py is not available and Qt related functionality will not be available!'
 
 QT_AVAILABLE = True
+_QT_TEST_AVAILABLE = True
 try:
-    from Qt.QtCore import Qt, Signal, QObject, QPoint, QSize
+    from Qt.QtCore import Qt, Signal, QObject, QPoint, QSize, QTimer
     from Qt.QtWidgets import QApplication, QLayout, QVBoxLayout, QHBoxLayout, QWidget, QFrame, QLabel, QPushButton
     from Qt.QtWidgets import QSizePolicy, QMessageBox, QInputDialog, QFileDialog, QMenu, QMenuBar
-    from Qt.QtGui import QFontDatabase, QPixmap, QIcon, QColor
+    from Qt.QtGui import QFontDatabase, QPixmap, QIcon, QColor, QCursor
     from Qt import QtGui
     from Qt import QtCompat
     from Qt import __binding__
 except ImportError as e:
     QT_AVAILABLE = False
-    LOGGER.warning('Impossible to load Qt libraries. Qt dependant functionality will be disabled!')
+    logger.warning('Impossible to load Qt libraries. Qt dependant functionality will be disabled!')
+try:
+    from Qt import QtTest
+except ImportError:
+    _QT_TEST_AVAILABLE = False
 
 if QT_AVAILABLE:
     if __binding__ == 'PySide2':
@@ -64,6 +69,9 @@ FLOAT_RANGE_MAX = MAX_INT + 0.1
 INT_RANGE_MIN = -MAX_INT
 INT_RANGE_MAX = MAX_INT
 CURRENT_DIR = os.path.expanduser('~')
+
+if helpers.is_python3():
+    long = int
 
 
 # ==============================================================================
@@ -219,9 +227,9 @@ def install_fonts(fonts_path):
             filename = os.path.join(font_path, filename)
             result = font_data_base.addApplicationFont(filename)
             if result > 0:
-                LOGGER.debug('Added font {}'.format(filename))
+                logger.debug('Added font {}'.format(filename))
             else:
-                LOGGER.debug('Impossible to add font {}'.format(filename))
+                logger.debug('Impossible to add font {}'.format(filename))
 
 
 def ui_path(cls):
@@ -492,7 +500,7 @@ def qhash(inputstr):
     if helpers.is_python2():
         if isinstance(inputstr, str):
             instr = inputstr
-        elif isinstance(inputstr, unicode):
+        elif helpers.is_python2() and isinstance(inputstr, unicode):
             instr = inputstr.encode("utf8")
         else:
             return -1
@@ -528,6 +536,45 @@ def get_widget_at_mouse():
     current_pos = QtGui.QCursor().pos()
     widget = QApplication.widgetAt(current_pos)
     return widget
+
+
+def get_widgets_at(pos):
+    """
+    Returns all widgets underneath the given mouse position.
+
+    :param QPoint pos: mouse cursor position.
+    :return: list of all widgets under given mouse position.
+    :rtype: list(QWidget)
+    """
+
+    widgets = list()
+    widget_at = QApplication.widgetAt(pos)
+
+    widgets_statuses = list()
+    while widget_at:
+        widgets.append((widget_at, widget_at.mapFromGlobal(pos)))
+        # make widget invisible to further enquiries
+        widgets_statuses.append((widget_at, widget_at.testAttribute(Qt.WA_TransparentForMouseEvents)))
+        widget_at.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        widget_at = QApplication.widgetAt(pos)
+
+    # restore attribute
+    for widget in widgets_statuses:
+        widget[0].setAttribute(Qt.WA_TransparentForMouseEvents, widget[1])
+
+    return widgets
+
+
+def get_widget_cursor(widget):
+    """
+    Returns the position of the cursor relative to the given widget.
+
+    :param QWidget widget: qt widget.
+    :return: cursor position.
+    :rtype: QPoint
+    """
+
+    return widget.mapFromGlobal(QCursor.pos())
 
 
 def is_valid_widget(widget):
@@ -1050,80 +1097,6 @@ def recursively_set_menu_actions_visibility(menu, state):
         menu.menuAction().setVisible(state)
 
 
-def dpi_multiplier():
-    """
-    Returns current application DPI multiplier
-    :return: float
-    """
-
-    return max(1, float(QApplication.desktop().logicalDpiY()) / float(consts.DEFAULT_DPI))
-
-
-def dpi_scale(value):
-    """
-    Resizes by value based on current DPI
-    :param int value: value default 2k size in pixels
-    :return: size in pixels now DPI monitor is (4k 2k etc)
-    :rtype: int
-    """
-
-    mult = dpi_multiplier()
-    return value * mult
-
-
-def dpi_scale_divide(value):
-    """
-    Invers resize by value based on current DPI, for values that may get resized twice
-    :param int value: size in pixels
-    :return: int divided size in pixels
-    """
-
-    mult = dpi_multiplier()
-    if value != 0:
-        return float(value) / float(mult)
-
-    return value
-
-
-def margins_dpi_scale(left, top, right, bottom):
-    """
-    Returns proper margins with DPI taking into account
-    :param int left:
-    :param int top:
-    :param int right:
-    :param int bottom:
-    :return: tuple(int, int, int, int)
-    """
-
-    if isinstance(left, tuple):
-        margins = left
-        return dpi_scale(margins[0]), dpi_scale(margins[1]), dpi_scale(margins[2]), dpi_scale(margins[3])
-
-    return dpi_scale(left), dpi_scale(top), dpi_scale(right), dpi_scale(bottom)
-
-
-def point_by_dpi(point):
-    """
-    Scales given QPoint by the current DPI scaling
-    :param QPoint point: point to scale by current DPI scaling
-    :return: Newly scaled QPoint
-    :rtype: QPoint
-    """
-
-    return QPoint(dpi_scale(point.x()), dpi_scale(point.y()))
-
-
-def size_by_dpi(size):
-    """
-    Scales given QSize by the current DPI scaling
-    :param QSize size: size to scale by current DPI scaling
-    :return: Newly scaled QSize
-    :rtype: QSize
-    """
-
-    return QSize(dpi_scale(size.width()), dpi_scale(size.height()))
-
-
 def get_window_menu_bar(window=None):
     """
     Returns menu bar of given window. If not given, DCC main window will be used
@@ -1267,11 +1240,37 @@ def find_coordinates_inside_screen(x, y, width, height, padding=0):
 def update_widget_style(widget):
     """
     Updates object widget style
-    Should be called for example when an style name changes
+    Should be called for example when n style name changes
     :param widget: QWidget
     """
 
     widget.setStyle(widget.style())
+
+
+def update_widget_sizes(widget):
+    """
+    Updates the given widget sizes.
+
+    :param QWidget widget: widget to update sizes of.
+    """
+
+    widget.layout().update()
+    widget.layout().activate()
+
+
+def set_stylesheet_object_name(widget, name, update=True):
+    """
+    Sets the widget to have a specific object name used by one the stylesheets.
+
+    :param QWidget widget: widget we want to set object name.
+    :param str name: stylesheet name for the widget.
+    :param bool update: whether to force the update the style of the widget after setting up the stylesheet
+        object name.
+    """
+
+    widget.setObjectName(name)
+    if update:
+        update_widget_style(widget)
 
 
 def iterate_parents(widget):
@@ -1311,12 +1310,121 @@ def iterate_children(widget, skip=None, qobj_class=None):
 
 def is_stackable(widget):
     """
-    Returns whether or not given widget is stackable
+    Returns whether given widget is stackable
     :param widget: QWidget
     :return: bool
     """
 
     return issubclass(widget, QWidget) and hasattr(widget, 'widget') and hasattr(widget, 'currentChanged')
+
+
+def get_current_screen(global_pos=None):
+    """
+    Returns current screen.
+
+    :return: current screen.
+    :rtype: QScreen
+    """
+
+    global_pos = global_pos if global_pos is not None else QApplication.desktop().cursor().pos()
+    try:
+        screen = QApplication.screenAt(global_pos)
+    except Exception:
+        screen_num = QApplication.desktop().screenNumber(global_pos)
+        screen = QApplication.screens()[screen_num]
+
+    return screen
+
+
+def get_current_screen_number(global_pos=None):
+    """
+    Returns current screen number.
+
+    :return: current screen number.
+    :rtype: int
+    """
+
+    global_pos = global_pos if global_pos is not None else QApplication.desktop().cursor().pos()
+    return QApplication.desktop().screenNumber(global_pos)
+
+
+def get_current_screen_geometry():
+    """
+    Returns the current screen geometry.
+
+    :return: screen geometry.
+    :rtype: QRect
+    """
+
+    screen = get_current_screen_number()
+    return QApplication.desktop().screenGeometry(screen)
+
+
+def contain_widget_in_screen(widget, pos=None):
+    """
+    Contains the position of the widget within the current screen.
+
+    :param QWidget widget:
+    :param QPoint or None pos:
+    :return:
+    """
+    if not pos:
+        pos = widget.mapToGlobal(QPoint(0, 0))
+    else:
+        pos = QPoint(pos)
+    geo = get_current_screen_geometry()
+    pos.setX(min(max(geo.x(), pos.x()), geo.right() - widget.width()))
+    pos.setY(min(max(geo.y(), pos.y()), geo.bottom() - widget.height()))
+
+    return pos
+
+
+def click_under(pos, under=1, button=Qt.LeftButton, modifier=Qt.KeyboardModifier.NoModifier):
+    """
+    Clicks under the widget.
+
+    :param QPoint pos: cursor position.
+    :param int under: number of iterations under.
+    :param Qt.Button button: button to simulate click with.
+    :param Qt.Modifier modifier: modifier to simulate click with.
+    """
+
+    if not _QT_TEST_AVAILABLE:
+        logger.warning('QtTest module is not available in current Qt version!')
+        return
+
+    widgets = get_widgets_at(pos)
+    QtTest.QTest.mouseClick(widgets[under][0], button, modifier, widgets[under][1])
+
+
+def single_shot_timer(func, time=0):
+    """
+    Calls given callable in the given time.
+
+    :param callable func: fucntion to execute when timer is completed.
+    :param int time: timer time in milliseconds to run the function.
+    """
+
+    QTimer.singleShot(time, func)
+
+
+def set_cursor(cursor):
+    """
+    Sets current Qt application cursor.
+
+    :param Qt.CursorShape cursor: cursor shape.
+    """
+
+    QApplication.setOverrideCursor(cursor)
+
+
+def restore_cursor():
+    """
+    Resets the cursor back to the default one.
+    """
+
+    QApplication.restoreOverrideCursor()
+    single_shot_timer(QApplication.restoreOverrideCursor)
 
 
 def get_screen_color(global_pos):

@@ -27,7 +27,7 @@ class ComboOption(option.Option, object):
         return ComboWidget(name=self._name)
 
     def get_name(self):
-        name = self._option_widget.get_name()
+        name = self._option_widget.name()
         return name
 
     def set_name(self, name):

@@ -13,12 +13,46 @@ from Qt.QtGui import QFont, QCursor
 
 from tp.core import dcc
 from tp.common.resources import icon
-from tp.common.qt.widgets import layouts, dialog, parsers, label
+from tp.common.qt.widgets import layouts, dialog, parsers, labels
 
 EXPANDED_TOOLTIP_INJECTOR_ATTRIBUTE = '_expandedTooltips_'
 
 
-class ExpandedTooltipPopup(dialog.BaseDialog, object):
+def install_tooltips(widget, tooltip_dict):
+    """
+    Intsalls the expanded tooltip onto a widget
+    :param QWidget widget:
+    :param dict tooltip_dict:
+    :return:
+    """
+
+    tooltip = tooltip_dict['tooltip']
+    widget.setToolTip(tooltip)
+    widget._expandedTooltips_ = ExpandedTooltips(tooltip_dict)
+
+
+def has_expanded_tooltips(widget):
+    """
+    Returns whether given widget has the injected _expandedToolTips_ object present in the widget
+    :param widget: QWidget
+    :return: bool
+    """
+
+    return hasattr(widget, EXPANDED_TOOLTIP_INJECTOR_ATTRIBUTE) and widget._expandedTooltips_.text != ''
+
+
+def copy_expanded_tooltips(source, target):
+    """
+    Copy the _expandedTooltips_ attribute from source widget into target one
+    :param QWidget source:
+    :param QWidget target:
+    :return:
+    """
+
+    target._expandedTooltips_ = source._expandedTooltips_
+
+
+class ExpandedTooltipPopup(dialog.BaseDialog):
 
     popupKey = Qt.Key_Control
 
@@ -101,7 +135,7 @@ class ExpandedTooltipPopup(dialog.BaseDialog, object):
 
     def set_icon(self, new_icon):
 
-        from tpDcc.libs.qt.widgets import buttons
+        from tp.common.qt.widgets import buttons
 
         new_icon = icon.colorize_icon(icon=new_icon, size=self._icon_size, color=self._icon_color)
         icon_widget = buttons.BaseToolButton(parent=self)
@@ -120,40 +154,6 @@ class ExpandedTooltipPopup(dialog.BaseDialog, object):
                             "style=\"color: rgb{}; font-weight: bold\" ".format(self._theme_color))
         text = text.replace("<a href=", "<a style=\"color: rgb{}; font-weight: bold\" href=".format(self._theme_color))
         return text
-
-
-def install_tooltips(widget, tooltip_dict):
-    """
-    Intsalls the expanded tooltip onto a widget
-    :param QWidget widget:
-    :param dict tooltip_dict:
-    :return:
-    """
-
-    tooltip = tooltip_dict['tooltip']
-    widget.setToolTip(tooltip)
-    widget._expandedTooltips_ = ExpandedTooltips(tooltip_dict)
-
-
-def has_expanded_tooltips(widget):
-    """
-    Returns whether given widget has the injected _expandedToolTips_ object present in the widget
-    :param widget: QWidget
-    :return: bool
-    """
-
-    return hasattr(widget, EXPANDED_TOOLTIP_INJECTOR_ATTRIBUTE) and widget._expandedTooltips_.text != ''
-
-
-def copy_expanded_tooltips(source, target):
-    """
-    Copy the _expandedTooltips_ attribute from source widget into target one
-    :param QWidget source:
-    :param QWidget target:
-    :return:
-    """
-
-    target._expandedTooltips_ = source._expandedTooltips_
 
 
 class ExpandedTooltips(QObject):

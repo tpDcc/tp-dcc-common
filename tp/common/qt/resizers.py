@@ -11,7 +11,7 @@ from Qt.QtCore import Qt, Signal, QSize
 from Qt.QtWidgets import QApplication, QWidget
 from Qt.QtGui import QCursor, QColor, QPainter
 
-from tp.common.qt import qtutils
+from tp.common.qt import dpi
 
 
 class ResizeDirection:
@@ -187,7 +187,7 @@ class CornerResizer(WindowResizer, object):
 
         super(CornerResizer, self)._init()
 
-        self.setFixedSize(qtutils.size_by_dpi(QSize(5, 5)))
+        self.setFixedSize(dpi.size_by_dpi(QSize(5, 5)))
 
 
 class VerticalResizer(WindowResizer, object):
@@ -212,7 +212,7 @@ class VerticalResizer(WindowResizer, object):
         """
 
         super(VerticalResizer, self)._init()
-        self.setFixedHeight(qtutils.dpi_scale(4))
+        self.setFixedHeight(dpi.dpi_scale(4))
 
 
 class HorizontalResizer(WindowResizer, object):
@@ -237,4 +237,4 @@ class HorizontalResizer(WindowResizer, object):
         """
 
         super(HorizontalResizer, self)._init()
-        self.setFixedWidth(qtutils.dpi_scale(4))
+        self.setFixedWidth(dpi.dpi_scale(4))

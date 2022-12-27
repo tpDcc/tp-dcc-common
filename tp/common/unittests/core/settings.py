@@ -41,7 +41,7 @@ class BaseUnitTestSettings(object):
 
     # Here we use uuid4() because it generates a random unique UUID, uuid1() generated a random UUID containing the
     # user computer's network address
-    temp_dir = os.path.join(tempfile.gettempdir(), '{}_unittest'.format(dcc.get_name()), str(uuid.uuid4()))
+    temp_dir = os.path.join(tempfile.gettempdir(), '{}_unittest'.format(dcc.name()), str(uuid.uuid4()))
 
     # Controls whether temp files should be deleted after running all tests in the test case
     delete_files = True

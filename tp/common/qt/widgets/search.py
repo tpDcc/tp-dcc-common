@@ -11,8 +11,25 @@ from Qt.QtCore import Qt, Signal, QSize, QEvent, QPoint
 from Qt.QtWidgets import QApplication, QWidget, QLineEdit, QStyle, QMenu
 from Qt.QtGui import QIcon
 
-from tpDcc.managers import resources
-from tpDcc.libs.qt.widgets import layouts, buttons
+from tp.core.managers import resources
+from tp.common.qt.widgets import layouts, stylebuttons
+
+
+def search_widget(placeholder_text='', search_line=None, parent=None):
+    """
+    Returns widget that allows to do searches within widgets.
+
+    :param str placeholder_text: search placeholder text.
+    :param QLineEdit search_line: custom line edit widget to use.
+    :param QWidget parent: parent widget.
+    :return: search find widget instance.
+    :rtype: SearchFindWidget
+    """
+
+    search_widget = SearchFindWidget(search_line=search_line, parent=parent)
+    search_widget.set_placeholder_text(str(placeholder_text))
+
+    return search_widget
 
 
 class SearchFindWidget(QWidget, object):
@@ -41,12 +58,12 @@ class SearchFindWidget(QWidget, object):
         delete_icon = resources.icon('delete')
         search_icon = QIcon(resources.icon('search'))
 
-        self._clear_btn = buttons.IconButton(delete_icon, icon_padding=2, parent=self)
+        self._clear_btn = stylebuttons.IconButton(delete_icon, icon_padding=2, parent=self)
         self._clear_btn.setIconSize(QSize(icon_size, icon_size))
         self._clear_btn.setFixedSize(QSize(icon_size, icon_size))
         self._clear_btn.hide()
 
-        self._search_btn = buttons.IconButton(search_icon, icon_padding=2, parent=self)
+        self._search_btn = stylebuttons.IconButton(search_icon, icon_padding=2, parent=self)
         self._search_btn.setIconSize(QSize(icon_size, icon_size))
         self._search_btn.setFixedSize(QSize(icon_size, icon_size))
         # self._search_btn.setStyleSheet('border: none;')

@@ -10,14 +10,17 @@ from __future__ import print_function, division, absolute_import
 from functools import partial
 
 from Qt.QtCore import Qt, QPoint, QEvent, QPropertyAnimation, QEasingCurve
-from Qt.QtWidgets import QGraphicsDropShadowEffect, QGraphicsOpacityEffect
+from Qt.QtWidgets import QApplication, QGraphicsDropShadowEffect, QGraphicsOpacityEffect
 
 from tp.common.qt import qtutils
 
 
-def property_mixin(cls):
+def dynamic_property(cls):
     """
-    Mixin decorator that runs a function after an object dynamic property value changed
+    Mixin decorator that runs a function after an object dynamic property value changed.
+    The decorator will for functions of the following format _set_{property_name} and will use that function
+    to update the Qt property dynamically.
+
     :param cls:
     :return: cls
     """
@@ -35,39 +38,47 @@ def property_mixin(cls):
     return cls
 
 
-# def cursor_mixin(cls):
-#     """
-#     Mixin decorator that changes cursor to Qt.PointingHandCursor when mouse is over an enabled widget and to
-#     Qt.ForbiddenCursor when mouse is over a disabled widget
-#     :param cls:
-#     :return: cls
-#     """
-#
-#     old_enter_event = cls.enterEvent
-#     old_leave_event = cls.leaveEvent
-#
-#     def _new_enter_event(self, *args, **kwargs):
-#         old_enter_event(self, *args, **kwargs)
-#         # QApplication.setOverrideCursor(Qt.PointingHandCursor if self.isEnabled() else Qt.ForbiddenCursor)
-#         return super(cls, self).enterEvent(*args, **kwargs)
-#
-#     def _new_leave_event(self, *args, **kwargs):
-#         old_leave_event(self, *args, **kwargs)
-#         # QApplication.restoreOverrideCursor()
-#         return super(cls, self).leaveEvent(*args, **kwargs)
-#
-#     setattr(cls, 'enterEvent', _new_enter_event)
-#     setattr(cls, 'leaveEvent', _new_leave_event)
-#
-#     return cls
-#
+def cursor_mixin(cls):
+    """
+    Mixin decorator that changes cursor to Qt.PointingHandCursor when mouse is over an enabled widget and to
+    Qt.ForbiddenCursor when mouse is over a disabled widget.
+    """
+
+    old_enter_event = cls.enterEvent
+    old_leave_event = cls.leaveEvent
+    old_hide_event = cls.hideEvent
+
+    def _new_enter_event(self, *args, **kwargs):
+        old_enter_event(self, *args, **kwargs)
+        self.__dict__.update({'__tpdcc_enter': True})
+        QApplication.setOverrideCursor(Qt.PointingHandCursor if self.isEnabled() else Qt.ForbiddenCursor)
+        return super(cls, self).enterEvent(*args, **kwargs)
+
+    def _new_leave_event(self, *args, **kwargs):
+        old_leave_event(self, *args, **kwargs)
+        if self.__dict__.get('__tpdcc_enter', False):
+            QApplication.restoreOverrideCursor()
+            self.__dict__.update({'__tpdcc_enter': False})
+        return super(cls, self).leaveEvent(*args, **kwargs)
+
+    def _new_hide_event(self, *args, **kwargs):
+        old_hide_event(self, *args, **kwargs)
+        if self.__dict__.get('__tpdcc_enter', False):
+            QApplication.restoreOverrideCursor()
+            self.__dict__.update({'__tpdcc_enter': False})
+        return super(cls, self).hideEvent(*args, **kwargs)
+
+    setattr(cls, 'enterEvent', _new_enter_event)
+    setattr(cls, 'leaveEvent', _new_leave_event)
+    setattr(cls, 'hideEvent', _new_hide_event)
+
+    return cls
+
 
 def focus_shadow_mixin(cls):
     """
     Adds a shadow effect for decorated class when widget is focused.
     If the widget is focused, shadow effect is enabled; otherwise shadow effect is disabled.
-    :param cls:
-    :return: cls
     """
 
     old_focus_in_event = cls.focusInEvent
@@ -205,11 +216,26 @@ def stacked_opacity_animation_mixin(cls):
 
 
 class FieldMixin(object):
+    """
+    Class that allows to implement a register/bind system to simply the usage of of Qt signals and the update
+    of Qt UIs in respnse to signals emitions.
+    """
 
     computed_dict = None
     properties_dict = None
 
     def register_field(self, name, getter=None, setter=None, required=False):
+        """
+        Registers a field with default values.
+
+        :param str name: name of the field to register.
+        :param callable or object getter:  bind getter function or default value of the field. If callable is given,
+            the default value is retrieved from the getter function.
+        :param callable setter:  bind setter function that is called when the binded propery is updated.
+        :param bool required:
+        :return:
+        """
+
         if self.computed_dict is None:
             self.computed_dict = dict()
         if self.properties_dict is None:
@@ -221,27 +247,45 @@ class FieldMixin(object):
                 'getter': getter,
                 'setter': setter,
                 'required': required,
-                'bind': []
+                'bind': list()
             }
         else:
             self.properties_dict[name] = {
                 'value': getter,
                 'required': required,
-                'bind': []
+                'bind': list()
             }
 
-    def bind(self, data_name, widget, qt_property, index=None, signal=None, callback=None):
+    # =================================================================================================================
+    # BASE
+    # =================================================================================================================
+
+    def bind(self, field_name, widget, qt_property, index=None, signal=None, callback=None):
+        """
+        Bind the given field to given widget Qt property.
+
+        :param str field_name: name of the field to bind.
+        :param QWidget widget: widget we want to bind to the field.
+        :param Property qt_property: QWidget property to bind to the field.
+        :param index:
+        :param Signal signal:
+        :param callback:
+        :return:
+
+        ..note:: Before binding a field, you must register it calling register_field function.
+        """
+
         data_dict = {
-            'data_name': data_name,
+            'data_name': field_name,
             'widget': widget,
             'widget_property': qt_property,
             'index': index,
             'callback': callback
         }
-        if data_name in self.computed_dict:
-            self.computed_dict[data_name]['bind'].append(data_dict)
+        if field_name in self.computed_dict:
+            self.computed_dict[field_name]['bind'].append(data_dict)
         else:
-            self.properties_dict[data_name]['bind'].append(data_dict)
+            self.properties_dict[field_name]['bind'].append(data_dict)
         if signal:
             getattr(widget, signal).connect(partial(self._slot_changed_from_user, data_dict))
 
@@ -250,9 +294,23 @@ class FieldMixin(object):
         return widget
 
     def fields(self):
-        return self.properties_dict.keys() + self.computed_dict.keys()
+        """
+        Returns all the registered fields.
+
+        :return: list of registered fields.
+        :rtype: list(str)
+        """
+        return list(self.properties_dict.keys()) + list(self.computed_dict.keys())
 
     def field(self, name):
+        """
+        Returns the value of the current registered field.
+
+        :param str name: name of the field we want to get value of.
+        :return: field value. If field is not registrered, None value if returned.
+        :rtype: object or None
+        """
+
         if name in self.properties_dict:
             return self.properties_dict[name]['value']
         elif name in self.computed_dict:
@@ -260,21 +318,41 @@ class FieldMixin(object):
             self.computed_dict[name]['value'] = new_value
             return new_value
         else:
-            raise KeyError('No filed with name: "{}" found!'.format(name))
+            logger.error('No field with name "{}" found!'.format(name))
+            return None
 
     def set_field(self, name, value):
+        """
+        Sets the value of the given registrerd field name updating the UI.
+
+        :param str name: name of the field we want to set value of.l
+        :param object value: new value of the field.
+        """
+
         if name in self.properties_dict:
             self.properties_dict[name]['value'] = value
             self._slot_property_changed(name)
         elif name in self.computed_dict:
             self.computed_dict[name]['value'] = value
 
+    # =================================================================================================================
+    # INTERNAL
+    # =================================================================================================================
+
     def _data_update_ui(self, data_dict):
+        """
+        Internal function thta updates binded wiget based on property data.
+
+        :param dict data_dict: binded field data.
+        """
+
+        # retrieve binded data
         data_name = data_dict.get('data_name')
         widget = data_dict['widget']
         index = data_dict['index']
         widget_property = data_dict['widget_property']
         callback = data_dict['callback']
+
         value = None
         if index is None:
             value = self.field(data_name)
@@ -282,8 +360,8 @@ class FieldMixin(object):
             value = self.field(data_name).get(index)
         elif isinstance(self.field(data_name), list):
             value = self.field(data_name)[index] if index < len(self.field(data_name)) else None
-        if widget.metaObject().indexOfProperty(widget_property) > -1 \
-                or widget_property in map(str, widget.dynamicPropertyNames()):
+        if widget.metaObject().indexOfProperty(widget_property) > -1 or widget_property in list(
+                map(str, [dynamic_property.data().decode() for dynamic_property in widget.dynamicPropertyNames()])):
             widget.setProperty(widget_property, value)
         else:
             widget.set_field(widget_property, value)
@@ -291,6 +369,13 @@ class FieldMixin(object):
             callback()
 
     def _slot_property_changed(self, property_name):
+        """
+        Internal function that checks registered fields and force the update of the UI if given property name
+        is binded.
+
+        :param str property_name: name of the changed property.
+        """
+
         for key, setting_dict in self.properties_dict.items():
             if key == property_name:
                 for data_dict in setting_dict['bind']:
@@ -301,9 +386,23 @@ class FieldMixin(object):
                 self._data_update_ui(data_dict)
 
     def _slot_changed_from_user(self, data_dict, ui_value):
+        """
+        Internal function that is called when a binded field with a default signals is setted.
+
+        :param dict data_dict:  binded field data.
+        :param object ui_value: new widget property value.
+        """
+
         self._ui_update_data(data_dict, ui_value)
 
     def _ui_update_data(self, data_dict, ui_value):
+        """
+        Internal function that updates data for the given widget based on given field data.
+
+        :param dict data_dict:  binded field data.
+        :param object ui_value: new widget property value.
+        """
+
         data_name = data_dict.get('data_name')
         index = data_dict.get('index', None)
         if index is None:

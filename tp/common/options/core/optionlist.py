@@ -192,7 +192,7 @@ class OptionList(QGroupBox, object):
         if hasattr(widget, 'child_layout'):
             self._deselect_children(widget)
 
-        parent = widget.get_parent()
+        parent = widget.parent()
         if not parent:
             parent = widget.parent()
 
@@ -435,7 +435,7 @@ class OptionList(QGroupBox, object):
         for i in range(item_count):
             item = scope.child_layout.itemAt(i)
             widget = item.widget()
-            label = widget.get_name()
+            label = widget.name()
             found.append(label)
 
         return found
@@ -483,7 +483,7 @@ class OptionList(QGroupBox, object):
         :return: str
         """
 
-        parent = widget.get_parent()
+        parent = widget.parent()
         path = ''
         parents = list()
         if parent:
@@ -492,9 +492,9 @@ class OptionList(QGroupBox, object):
                 if issubclass(sub_parent.__class__, OptionList) and not \
                         sub_parent.__class__.__name__.endswith('OptionListGroup'):
                     break
-                name = sub_parent.get_name()
+                name = sub_parent.name()
                 parents.append(name)
-                sub_parent = sub_parent.get_parent()
+                sub_parent = sub_parent.parent()
 
         parents.reverse()
 
@@ -502,9 +502,9 @@ class OptionList(QGroupBox, object):
             path += '{}.'.format(sub_parent)
 
         if hasattr(widget, 'child_layout'):
-            path = path + widget.get_name() + '.'
+            path = path + widget.name() + '.'
         else:
-            path = path + widget.get_name()
+            path = path + widget.name()
 
         return path
 
@@ -601,12 +601,12 @@ class OptionList(QGroupBox, object):
         if widget.__class__.__name__.endswith('OptionList'):
             return widget
 
-        parent = widget.get_parent()
+        parent = widget.parent()
         if not parent:
             return
 
         while not parent.__class__.__name__.endswith('OptionList'):
-            parent = parent.get_parent()
+            parent = parent.parent()
 
         return parent
 
@@ -628,7 +628,7 @@ class OptionList(QGroupBox, object):
                 item = sub_widget.child_layout.itemAt(i)
                 if item:
                     widget = item.widget()
-                    label = widget.get_name()
+                    label = widget.name()
                     if label == name:
                         sub_widget = widget
                         found = True

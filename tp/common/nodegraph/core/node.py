@@ -2,423 +2,388 @@
 # -*- coding: utf-8 -*-
 
 """
-Module that contains node model implementation
+Module that contains node object implementation
 """
 
 from __future__ import print_function, division, absolute_import
 
-import logging
-from uuid import uuid4
-
-from Qt.QtCore import QObject, Signal
-
-from tpDcc.libs.python import python, name as name_utils
-
-from tpDcc.libs.nodegraph.core import consts, exceptions
-from tpDcc.libs.nodegraph.managers import ports
-
-LOGGER = logging.getLogger('tpDcc-libs-nodegraph')
-
-
-class Node(QObject):
-
-    PACKAGE_NAME = consts.DEFAULT_NODE_PACKAGE_NAME
-    MODULE_NAME = consts.DEFAULT_NODE_MODULE_NAME
-
-    CATEGORY = consts.DEFAULT_NODE_CATEGORY
-    KEYWORDS = consts.DEFAULT_NODE_KEYWORDS
-    DESCRIPTION = consts.DEFAULT_NODE_DESCRIPTION
-
-    uuidChanged = Signal(str)
-    nameChanged = Signal(str)
-    enabledChanged = Signal(bool)
-    positionChanged = Signal(tuple)
-    inputPortAdded = Signal(str)
-    outputPortAdded = Signal(str)
-    ticked = Signal(float)
-
-    def __init__(self, name='node', uuid=None):
-        super(Node, self).__init__()
-
-        self._uuid = str(uuid or uuid4())
-        self._name = name
-        self._enabled = True
-        self._graph = None
-        self._x = 0.0
-        self._y = 0.0
-        self._is_dirty = True
-        self._eval_count = 0
-        self._inputs = python.UniqueOrderedDict()
-        self._outputs = python.UniqueOrderedDict()
-        self._custom_properties = dict()
-
-        self.init_ports()
-
-    def __repr__(self):
-        graph_name = self._graph.name if self._graph else str(None)
-        return '<class[{}]; name[{}]; graph[{}]>'.format(self.__class__.__name__, self._name, graph_name)
-
-    def __getitem__(self, port_name):
-        try:
-            return self.getter(port_name)
-        except Exception as exc:
-            if '<str>' in str(exc):
-                try:
-                    return self.getter(str(port_name))
-                except:
-                    raise Exception('Could not find port with name: {}'.format(port_name))
-            else:
-                raise Exception('Could not find signature for __getitem__: {}'.format(type(port_name)))
-
-    # =================================================================================================================
-    # PROPERTIES
-    # =================================================================================================================
-
-    @python.classproperty
-    def node_type(cls):
-        return '{}.{}'.format(cls.MODULE_NAME, cls.__name__)
-
-    @property
-    def uuid(self):
-        return self._uuid
-
-    @uuid.setter
-    def uuid(self, value):
-        self._uuid = str(value)
-        self.uuidChanged.emit(self._uuid)
-
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, value):
-        self._name = str(value)
-        self.nameChanged.emit(self._name)
-
-    @property
-    def enabled(self):
-        return self._enabled
-
-    @enabled.setter
-    def enabled(self, flag):
-        self._enabled = flag
-        self.enabledChanged.emit(self._enabled)
-
-    @property
-    def x(self):
-        return self._x
-
-    @x.setter
-    def x(self, value):
-        self._x = float(value)
-        self.positionChanged.emit((self._x, self._y))
-
-    @property
-    def y(self):
-        return self._y
-
-    @y.setter
-    def y(self, value):
-        self._y = float(value)
-        self.positionChanged.emit((self._x, self._y))
-
-    @property
-    def graph(self):
-        return self._graph
-
-    @graph.setter
-    def graph(self, value):
-        self._graph = value
-
-    @property
-    def is_dirty(self):
-        return self._is_dirty
-
-    @is_dirty.setter
-    def is_dirty(self, flag):
-        self._is_dirty = bool(flag)
-
-        # Propagate dirtiness through chain if necessary (when using pull graph evaluation model)
-        if not self._is_dirty:
-            return
-        for output_port in self._outputs.values():
-            if output_port.is_connected():
-                for source in output_port.sources:
-                    source.node.is_dirty = True
-
-    @property
-    def inputs(self):
-        return tuple(self._inputs.values())
-
-    @property
-    def outputs(self):
-        return tuple(self._outputs.values())
-
-    # =================================================================================================================
-    # GETTERS / SETTERS
-    # =================================================================================================================
-
-    def get_evaluation_model(self):
-        return None if not self._graph else self._graph.evaluation_model
-
-    def get_input(self, name):
-        return self._inputs.get(name)
-
-    def get_output(self, name):
-        return self._outputs.get(name)
-
-    def get_inputs(self):
-        return self._inputs.values()
-
-    def get_outputs(self):
-        return self._outputs.values()
-
-    # =================================================================================================================
-    # BASE
-    # =================================================================================================================
-
-    @staticmethod
-    def port_type_hints():
-        return NodePortsSuggestionsHelper()
-
-    def get_full_name(self):
-        return self.name
-
-    def tick(self, delta_time):
-        self.ticked.emit(delta_time)
-
-    def evaluate(self):
-        self._eval_count += 1
-        LOGGER.debug('Evaluating {}'.format(self))
-
-    # =================================================================================================================
-    # SERIALIZATION
-    # =================================================================================================================
-
-    @classmethod
-    def template(cls):
-        template_dict = dict()
-        node_attributes = python.get_instance_user_attributes(cls)
-        attrs_to_exclude = ['CATEGORY', 'DESCRIPTION', 'KEYWORDS', 'MODULE_NAME', 'PACKAGE_NAME']
-        for node_attribute in node_attributes:
-            attribute_name = node_attribute[0]
-            attribute_value = node_attribute[1]
-            if attribute_name in attrs_to_exclude:
-                continue
-            if isinstance(attribute_value, Signal):
-                continue
-            elif isinstance(attribute_value, property):
-                continue
-                # template_dict[node_attribute[0]] = None
-            else:
-                template_dict[node_attribute[0]] = attribute_value
-        template_dict['module'] = cls.MODULE_NAME
-        template_dict['package'] = cls.PACKAGE_NAME
-        template_dict['class_name'] = cls.__name__
-
-        return template_dict
-
-    def properties(self):
-        properties_dict = dict()
-        node_attributes = python.get_instance_user_attributes(self)
-        attrs_to_exclude = ['CATEGORY', 'DESCRIPTION', 'KEYWORDS', 'MODULE_NAME', 'PACKAGE_NAME']
-        for node_attribute in node_attributes:
-            attribute_name = node_attribute[0]
-            attribute_value = node_attribute[1]
-            if attribute_name in attrs_to_exclude or attribute_name.startswith('_'):
-                continue
-            if isinstance(attribute_value, Signal) or callable(attribute_value):
-                continue
-            elif isinstance(attribute_value, property):
-                properties_dict[node_attribute[0]] = None
-            else:
-                properties_dict[node_attribute[0]] = attribute_value
-
-        return properties_dict
-
-    def update_properties(self, properties_dict, block_signals=False):
-        self.blockSignals(block_signals)
-        try:
-            for attribute_name, attribute_value in properties_dict.items():
-                if hasattr(self, attribute_name):
-                    try:
-                        setattr(self, attribute_name, attribute_value)
-                    except AttributeError:
-                        # We make sure that inputs and outputs have the UUIDs of the properties dict
-                        if attribute_name == 'inputs':
-                            for input in self.inputs:
-                                for input_uuid, input_data in attribute_value.items():
-                                    if input_data['name'] == input.name:
-                                        input.uuid = input_uuid
-                        elif attribute_name == 'outputs':
-                            for output in self.outputs:
-                                for output_uuid, output_data in attribute_value.items():
-                                    if output_data['name'] == output.name:
-                                        output.uuid = output_uuid
-                    except Exception as exc:
-                        LOGGER.warning(
-                            'Impossible to set node attribute: {} : {} | {}'.format(
-                                attribute_name, attribute_value, exc))
-                        continue
-        finally:
-            self.blockSignals(False)
-
-    def get_property(self, name):
-        node_properties = self.properties()
-        if name in node_properties:
-            return node_properties[name]
-
-        return self._custom_properties.get(name, None)
-
-    def set_property(self, name, value):
-        node_properties = self.properties()
-        if name in node_properties:
-            setattr(name, value)
-        elif name in self._custom_properties:
-            self._custom_properties[name] = value
-        else:
-            self.add_property(name, value)
-
-    def add_property(self, name, value):
-        if name in self.properties():
-            raise exceptions.NodePropertyError('"{}" reserved for default property'.format(name))
-        if name in self._custom_properties:
-            raise exceptions.NodePropertyError('"{}" property already exists'.format(name))
-
-        self._custom_properties[name] = value
-
-    def serialize(self):
-        data = self.template()
-        data.update(self.properties())
-        data.pop('is_dirty', None)
-        data.pop('value', None)
-        data['graph'] = str(self._graph.uuid) if self._graph else None
-        data['inputs'] = dict()
-        data['outputs'] = dict()
-
-        for input_name, input_port in self._inputs.items():
-            input_data = input_port.serialize()
-            input_uuid = input_data.pop('uuid')
-            data['inputs'][input_uuid] = input_data
-
-        for output_uuid, output_port in self._outputs.items():
-            output_data = output_port.serialize()
-            output_data.pop('uuid')
-            data['outputs'][output_uuid] = output_data
-
-        return data
-
-    @classmethod
-    def from_data(cls, graph, data):
-        from tpDcc.libs.nodegraph.managers import nodes
-
-        assert str(graph.uuid) == data['graph']
-
-        new_node = nodes.create_node_model_from_template(data)
-        new_node.graph = graph
-
-        for input_uuid, input_data in data['inputs'].items():
-            input_name = input_data['name']
-            input_port = new_node.get_input(input_name)
-            for source_name in input_data['sources']:
-                input_port.connect_to(graph.get(source_name))
-            if not input_port.is_connected():
-                input_port.value = input_data['value']
-
-        for output_uuid, output_data in data['outputs'].items():
-            input_name = output_data['name']
-            output_port = new_node.get_output(input_name)
-            for source_name in output_data['sources']:
-                input_port = graph.get(source_name)
-                if not input_port.is_connected():
-                    input_port.connect_to(output_port)
-
-        return new_node
-
-    def delete(self):
-        return self._graph.delete_node(self.uuid)
-
-    # =================================================================================================================
-    # PORTS
-    # =================================================================================================================
-
-    def init_ports(self):
-        pass
-
-    def get_unique_port_name(self, name):
-        port_names = [port_found for port_found in list(self._inputs.keys()) + list(self._outputs.keys())]
-        return name_utils.get_unique_name_from_list(port_names, name)
-
-    def add_input_port(self, name, data_type, **kwargs):
-
-        function = kwargs.pop('function', None)
-
-        input_port = self._create_port(name, data_type, direction=consts.PortDirection.Input, **kwargs)
-        self._inputs[name] = input_port
-
-        structure = input_port.structure
-        if structure == consts.PortStructure.Array:
-            input_port.init_as_array(True)
-        elif structure == consts.PortStructure.Dict:
-            input_port.init_as_dict(True)
-
-        if function:
-            input_port.function = function
-
-        return input_port
-
-    def add_output_port(self, name, data_type, **kwargs):
-        output_port = self._create_port(name, data_type, direction=consts.PortDirection.Output, **kwargs)
-        self._outputs[name] = output_port
-
-        return output_port
-
-    def _create_port(self, name, data_type, direction, **kwargs):
-        port_name = self.get_unique_port_name(name)
-        new_port = ports.create_port_model_by_data_type(
-            data_type, name=port_name, node=self, direction=direction, **kwargs)
-
-        return new_port
-
-
-class NodePortsSuggestionsHelper(object):
-    def __init__(self):
-        super(NodePortsSuggestionsHelper, self).__init__()
-
-        self._template = {
-            'types': {'inputs': [], 'outputs': []},
-            'structs': {'inputs': [], 'outputs': []}
-        }
-        self._input_types = set()
-        self._output_types = set()
-        self._input_structs = set()
-        self._output_structs = set()
-
-    @property
-    def input_types(self):
-        return self._input_types
-
-    @property
-    def output_types(self):
-        return self._output_types
-
-    @property
-    def input_structs(self):
-        return self._input_structs
-
-    @property
-    def output_structs(self):
-        return self._output_structs
-
-    def add_input_data_type(self, data_type):
-        self._input_types.add(data_type)
-
-    def add_output_data_type(self, data_type):
-        self._output_types.add(data_type)
-
-    def add_input_struct(self, struct):
-        self._input_structs.add(struct)
-
-    def add_output_struct(self, struct):
-        self._output_structs.add(struct)
+from collections import OrderedDict
+
+from tp.common.nodegraph.core import consts, abstract, exceptions, datatypes, socket
+from tp.common.nodegraph.views import node as node_view
+from tp.common.nodegraph.painters import socket as socket_painters
+from tp.common.nodegraph.widgets import nodewidgets
+
+
+class BaseNode(abstract.Node):
+	"""
+	Base class for nodes that allow socket connections from one node to another.
+	"""
+
+	NODE_NAME = 'Node'
+
+	def __init__(self, view=None):
+		view = view or node_view.NodeView
+
+		super(BaseNode, self).__init__(view=view)
+
+		self._inputs = list()
+		self._outputs = list()
+
+	# ==================================================================================================================
+	# OVERRIDES
+	# ==================================================================================================================
+
+	def update_model(self):
+		"""
+		Updates the node model from view.
+		"""
+
+		for name, value in self.view.properties.items():
+			if name in ['inputs', 'outputs']:
+				continue
+			self.model.set_property(name, value)
+
+		for name, widget in self.view.widgets.items():
+			self.model.set_property(name, widget.value())
+
+	# ==================================================================================================================
+	# BASE
+	# ==================================================================================================================
+
+	def icon(self):
+		"""
+		Returns node icon path.
+
+		:return: node icon path.
+		:rtype: str or None
+		"""
+
+		return self.model.icon
+
+	def set_icon(self, icon=None):
+		"""
+		Sets the node icon.
+
+		:param str icon: path to the icon image.
+		"""
+
+		self.set_property('icon', icon)
+
+	# ==================================================================================================================
+	# SOCKETS
+	# ==================================================================================================================
+
+	# NOTE: do change function name, used by NodeGraph to access node socket easily (_on_connection_changed)
+	def inputs(self):
+		"""
+		Returns all the input socket from the node.
+
+		:return: all node input sockets.
+		:rtype: dictionary with the input socket names as keys and the input socket objects as values.
+		:rtype: dict(str, Socket)
+		"""
+
+		return {node_socket.name(): node_socket for node_socket in self._inputs}
+
+	def input_sockets(self):
+		"""
+		Returns all input sockets.
+
+		:return: list of node input sockets.
+		:rtype: list[tp.common.nodegraph.core.socket.Socket]
+		"""
+
+		return self._inputs
+
+	# NOTE: do change function name, used by NodeGraph to access node socket easily (_on_connection_changed)
+	def outputs(self):
+		"""
+		Returns all the output socket from the node.
+
+		:return: all node output sockets.
+		:rtype: dictionary with the output socket names as keys and the output socket objects as values.
+		:rtype: dict(str, Socket)
+		"""
+
+		return {node_socket.name(): node_socket for node_socket in self._outputs}
+
+	def output_sockets(self):
+		"""
+		Returns all output sockets.
+
+		:return: list of node output sockets.
+		:rtype: list[tp.common.nodegraph.core.socket.Socket]
+		"""
+
+		return self._outputs
+
+	def input(self, index):
+		"""
+		Returns the input socket with the matching index.
+
+		:param int index: index of the input socket.
+		:return: socket instance.
+		:rtype: tp.common.nodegraph.core.socket.Socket
+		"""
+
+		return self._inputs[index]
+
+	def set_input(self, index, output_socket):
+		"""
+		Creates a connection to the given output socket.
+		:param int index: index of the input socket to connect.
+		:param tp.common.nodegraph.core.socket.Socket output_socket: output socket to connect.
+		"""
+
+		input_socket = self.input(index)
+		input_socket.connect_to(output_socket)
+
+	def output(self, index):
+		"""
+		Returns the output socket with the matching index.
+
+		:param int index: index of the output socket.
+		:return: socket instance.
+		:rtype: tp.common.nodegraph.core.socket.Socket
+		"""
+
+		return self._outputs[index]
+
+	def set_output(self, index, input_socket):
+		"""
+		Creates a connection between the given input socket.
+
+		:param int index: index of the output socket given input will be connected to.
+		:param tp.common.nodegraph.core.socket.Socket input_socket: input socket that will be connected.
+		"""
+
+		output_socket = self.output(index)
+		output_socket.connect_to(input_socket)
+
+	def add_input(
+			self, name='input', multi_input=False, display_name=True, color=None, data_type=None, locked=False,
+			painter_fn=None):
+		"""
+		Adds a new input socket into the node.
+
+		:param str name: name for the input socket.
+		:param bool multi_input: whether to allow socket to have more than one connection.
+		:param str display_name: display the port name on the node.
+		:param tuple(int, int, int) color: initial port color in 0 to 255 range.
+		:param str data_type: socket data type name.
+		:param bool locked: locked state of the socket.
+		:param callable painter_fn: custom function to override the drawing of the socket.
+		:return: newly created socket object.
+		:rtype: Socket
+		"""
+
+		data_type = data_type or datatypes.DataTypes.EXEC
+
+		if name in self.inputs().keys():
+			raise exceptions.SocketDuplicatedError('socket input name "{}" already registered!'.format(name))
+
+		# exec inputs only can be connected to one output
+		if data_type == datatypes.DataTypes.EXEC:
+			multi_input = False
+
+		painter_fn = painter_fn or socket_painters.exec_socket_painter if data_type == datatypes.DataTypes.EXEC else None
+		socket_args = [name, multi_input, display_name, locked]
+		if painter_fn and callable(painter_fn):
+			socket_args.append(painter_fn)
+		socket_view = self._view.add_input(*socket_args)
+
+		# if a color is not defined we use data type specific color
+		if not color:
+			color = datatypes.get(data_type).get('color').toTuple()
+		if color:
+			socket_view.color = color
+			socket_view.border_color = [min([255, max([0, i + 80])]) for i in color]
+
+		new_socket = socket.Socket(self, socket_view)
+		new_socket.model.direction = consts.SocketDirection.Input
+		new_socket.model.name = name
+		new_socket.display_name = display_name
+		new_socket.model.multi_connection = multi_input
+		new_socket.model.data_type = data_type
+		new_socket.model.locked = locked
+		self._inputs.append(new_socket)
+		self.model.inputs[new_socket.name()] = new_socket.model
+
+		return new_socket
+
+	def add_output(self, name='output', multi_output=True, display_name=True, color=None, data_type=None, locked=False,
+				   painter_fn=None):
+		"""
+		Adds a new input socket into the node.
+
+		:param str name: name for the input socket.
+		:param bool multi_output: whether to allow socket to have more than one connection.
+		:param str display_name: display the port name on the node.
+		:param tuple(int, int, int) color: initial port color in 0 to 255 range.
+		:param str data_type: socket data type name.
+		:param bool locked: locked state of the socket.
+		:param callable painter_fn: custom function to override the drawing of the socket.
+		:return: newly created socket object.
+		:rtype: Socket
+		"""
+
+		data_type = data_type or datatypes.DataTypes.EXEC
+
+		if name in self.outputs().keys():
+			raise exceptions.SocketDuplicatedError('socket output name "{}" already registered!'.format(name))
+
+		# exec outputs only can be connected to one input
+		if data_type == datatypes.DataTypes.EXEC:
+			multi_output = False
+
+		painter_fn = painter_fn or socket_painters.exec_socket_painter if data_type == datatypes.DataTypes.EXEC else None
+		socket_args = [name, multi_output, display_name, locked]
+		if painter_fn and callable(painter_fn):
+			socket_args.append(painter_fn)
+		socket_view = self._view.add_output(*socket_args)
+
+		# if a color is not defined we use data type specific color
+		if not color:
+			color = datatypes.get(data_type).get('color').toTuple()
+		if color:
+			socket_view.color = color
+			socket_view.border_color = [min([255, max([0, i + 80])]) for i in color]
+
+		new_socket = socket.Socket(self, socket_view)
+		new_socket.model.direction = consts.SocketDirection.Output
+		new_socket.model.name = name
+		new_socket.model.multi_connection = multi_output
+		new_socket.model.data_type = data_type
+		new_socket.model.locked = locked
+		self._outputs.append(new_socket)
+		self.model.outputs[new_socket.name()] = new_socket.model
+
+		return new_socket
+
+	def connected_input_nodes(self):
+		"""
+		Returns all nodes connected from the input sockets.
+
+		:return: input nodes mapping.
+		:rtype: dict(tp.common.nodegraph.core.socket.Socket: list[tp.common.nodegraph.core.node.BaseNode]]
+		"""
+
+		nodes = OrderedDict()
+		for input_socket in self.input_sockets():
+			nodes[input_socket] = [connected_socket.node() for connected_socket in input_socket.connected_sockets()]
+
+		return nodes
+
+	def connected_output_nodes(self):
+		"""
+		Returns all nodes connected from the output sockets.
+
+		:return: output nodes mapping.
+		:rtype: dict(tp.common.nodegraph.core.socket.Socket: list[tp.common.nodegraph.core.node.BaseNode]]
+		"""
+
+		nodes = OrderedDict()
+		for output_socket in self.output_sockets():
+			nodes[output_socket] = [connected_socket.node() for connected_socket in output_socket.connected_sockets()]
+
+		return nodes
+
+	# =================================================================================================================
+	# WIDGETS
+	# =================================================================================================================
+
+	def widgets(self):
+		"""
+		Returns al embedded widgets from this node.
+
+		:return: list of embedded widgets.
+		:rtype: list[nodewidgets.NodeBaseWidget]
+		"""
+
+		return self.view.widgets
+
+	def widget(self, name):
+		"""
+		Returns the embedded widget associated with the given property name.
+
+		:param str name: node property name.
+		:return: embedded node widget.
+		:rtype: nodewidgets.NodeBaseWidget
+		"""
+
+		return self.view.widgets.get(name)
+
+	def add_combo_menu(self, name, label='', items=None, tab=None):
+		"""
+		Creates a custom property and embeds a combo box widget into the node.
+
+		:param str name: name for the custom property.
+		:param str label: label to be displayed.
+		:param list[str] or None items: optional list of items to be added into the menu.
+		:param str or None tab: name of the widget tab to display in.
+		"""
+
+		self.create_property(
+			name, value=items[0] if items else None, items=items or list(),
+			widget_type=consts.PropertiesEditorWidgets.COMBOBOX, tab=tab)
+		widget = nodewidgets.NodeComboBox(name=name, label=label, items=items, parent=self.view)
+		widget.valueChanged.connect(lambda k, v: self.set_property(k, v))
+		self.view.add_widget(widget)
+
+	def add_text_input(self, name, label='', text='', tab=None):
+		"""
+		Creates a custom property and embeds a line edit widget into the node.
+
+		:param str name: name for the custom property.
+		:param str label: label to be displayed.
+		:param str text: optional default text.
+		:param str or None tab: name of the widget tab to display in.
+		"""
+
+		self.create_property(name, value=text, widget_type=consts.PropertiesEditorWidgets.LINE_EDIT, tab=tab)
+		widget = nodewidgets.NodeLineEdit(name=name, label=label, text=text, parent=self.view)
+		widget.valueChanged.connect(lambda k, v: self.set_property(k, v))
+		self.view.add_widget(widget)
+
+	def add_checkbox(self, name, label='', text='', state=False, tab=None):
+		"""
+		Creates a custom property and embeds a checkbox widget into the node.
+
+		:param str name: name for the custom property.
+		:param str label: label to be displayed.
+		:param str text: optional checkbox text.
+		:param bool state: default checkbox check state.
+		:param str or None tab: name of the widget tab to display in.
+		"""
+
+		self.create_property(name, value=state, widget_type=consts.PropertiesEditorWidgets.CHECKBOX, tab=tab)
+		widget = nodewidgets.NodeCheckBox(name=name, label=label, text=text, state=state, parent=self.view)
+		widget.valueChanged.connect(lambda k, v: self.set_property(k, v))
+		self.view.add_widget(widget)
+
+	# =================================================================================================================
+	# CALLBACKS
+	# =================================================================================================================
+
+	def _on_input_connected(self, input_socket, output_socket):
+		"""
+		Internal callback function that is triggered when a new connection is made.
+
+		:param tp.common.nodegraph.core.socket.Socket input_socket: source input socket from this node.
+		:param tp.common.nodegraph.core.socket.Socket output_socket: output socket that connected to this node.
+		..info:: this function does nothing by default, re-implement if custom logic is required.
+		"""
+
+		pass
+
+	def _on_input_disconnected(self, input_socket, output_socket):
+		"""
+		Internal callback function that is triggered when a connection has been disconnected.
+
+		:param tp.common.nodegraph.core.socket.Socket input_socket: source input socket from this node.
+		:param tp.common.nodegraph.core.socket.Socket output_socket: output socket that was disconnected from this node.
+		..info:: this function does nothing by default, re-implement if custom logic is required.
+		"""
+
+		pass

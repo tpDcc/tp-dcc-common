@@ -17,7 +17,7 @@ class MessageHandler(object):
     def __init__(self):
         super(MessageHandler, self).__init__()
 
-        self.parent_window = dcc.get_main_window()
+        self.parent_window = dcc.main_window()
 
     def set_message(self, msg, level=0):
         """

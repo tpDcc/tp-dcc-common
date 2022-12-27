@@ -115,7 +115,7 @@ class VersionFile(object):
 
     def __init__(self, file_path):
         self._file_path = file_path
-        self._path = path.get_dirname(file_path)
+        self._path = path.dirname(file_path)
         self._version_folder_name = '__version__'
         self._version_folder = None
         self._comment_file = None
@@ -460,7 +460,7 @@ class VersionFile(object):
 
     def _get_version_folder(self):
         if path.is_file(self._file_path):
-            version_dir = path.get_dirname(self._file_path)
+            version_dir = path.dirname(self._file_path)
             version_path = path.join_path(version_dir, self._version_folder_name)
             if not os.path.isdir(version_path):
                 version_path = path.join_path(self._path, self._version_folder_name)

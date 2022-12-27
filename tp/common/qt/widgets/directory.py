@@ -8,19 +8,86 @@ Module that contains widgets related with directories and files
 from __future__ import print_function, division, absolute_import
 
 import os
-import logging
+import enum
 
-from tpDcc import dcc
 from Qt.QtCore import Qt, Signal
 from Qt.QtWidgets import QSizePolicy, QWidget, QListWidget, QAbstractItemView
 from Qt.QtGui import QColor, QPalette
 
-from tpDcc.managers import resources
-from tpDcc.libs.python import path
-from tpDcc.libs.qt.core import base, qtutils
-from tpDcc.libs.qt.widgets import layouts, buttons, lineedit, label
+from tp.core import log, dcc
+from tp.core.managers import resources
+from tp.common.python import path
+from tp.common.qt import base, qtutils, contexts as qt_contexts
+from tp.common.qt.widgets import layouts, buttons, lineedits, labels
 
-LOGGER = logging.getLogger('tpDcc-libs-qt')
+logger = log.tpLogger
+
+
+def open_folder_widget(default_path='', label_text='', dialog_label='', start_directory='', clear=False, parent=None):
+    """
+    Creates a widget that allows user to open a folder.
+
+    :param str default_path: default directory path.
+    :param str label_text: label text.
+    :param str dialog_label: open folder dialog label.
+    :param str start_directory: default start directory path when browser is opened.
+    :param bool clear: whether a clear button should appear.
+    :param QWidget parent: optional parent widget.
+    :return: select folder widget instance.
+    :rtype: PathWidget
+    """
+
+    new_open_folder_widget = PathWidget(
+        mode=PathWidget.Mode.EXISTING_DIR, default_path=default_path, label_text=label_text,
+        dialog_label=dialog_label, start_directory=start_directory, clear=clear, parent=parent)
+
+    return new_open_folder_widget
+
+
+def open_file_widget(
+        default_path='', label_text='', dialog_label='', filters=None, start_directory='', clear=False, parent=None):
+    """
+    Creates a widget that allows user to open a file.
+
+    :param str default_path: default file path.
+    :param str label_text: label text.
+    :param str dialog_label: open folder dialog label.
+    :param str filters: file filters.
+    :param str start_directory: default start directory path when browser is opened.
+    :param bool clear: whether a clear button should appear.
+    :param QWidget parent: optional parent widget.
+    :return: select folder widget instance.
+    :rtype: PathWidget
+    """
+
+    new_open_file_widget = PathWidget(
+        mode=PathWidget.Mode.EXISTING_FILE, default_path=default_path, label_text=label_text,
+        dialog_label=dialog_label, filters=filters, start_directory=start_directory, clear=clear, parent=parent)
+
+    return new_open_file_widget
+
+
+def save_file_widget(
+        default_path='', label_text='', dialog_label='', filters=None, start_directory='', clear=False, parent=None):
+    """
+    Creates a widget that allows user to select a file to save.
+
+    :param str default_path: default file path.
+    :param str label_text: label text.
+    :param str dialog_label: open folder dialog label.
+    :param str filters: file filters.
+    :param str start_directory: default start directory path when browser is opened.
+    :param bool clear: whether a clear button should appear.
+    :param QWidget parent: optional parent widget.
+    :return: select folder widget instance.
+    :rtype: PathWidget
+    """
+
+    new_open_file_widget = PathWidget(
+        mode=PathWidget.Mode.SAVE_FILE, default_path=default_path, label_text=label_text,
+        dialog_label=dialog_label, filters=filters, start_directory=start_directory, clear=clear, parent=parent)
+
+    return new_open_file_widget
 
 
 class FileListWidget(QListWidget, object):
@@ -118,7 +185,7 @@ class FileListWidget(QListWidget, object):
         self.files_selected.emit(names)
 
 
-class FolderEditLine(lineedit.BaseLineEdit, object):
+class FolderEditLine(lineedits.BaseLineEdit, object):
     """
     Custom QLineEdit with drag and drop behaviour for files and folders
     """
@@ -230,8 +297,8 @@ class SelectFolder(QWidget, object):
         main_layout = layouts.HorizontalLayout(spacing=2, margins=(2, 2, 2, 2))
         self.setLayout(main_layout)
 
-        self._folder_label = label.BaseLabel(
-            '{0}'.format(self._label_text)) if self._label_text == '' else label.BaseLabel(
+        self._folder_label = labels.BaseLabel(
+            '{0}'.format(self._label_text)) if self._label_text == '' else labels.BaseLabel(
             '{0}:'.format(self._label_text))
         if not self._label_text:
             self._folder_label.setVisible(False)
@@ -329,6 +396,235 @@ class SelectFolder(QWidget, object):
         self.directoryChanged.emit(directory)
 
 
+class PathWidget(base.DirectoryWidget):
+
+    class Mode(enum.IntEnum):
+        EXISTING_DIR = 0
+        EXISTING_FILE = 1
+        SAVE_FILE = 2
+
+    def __init__(self, mode=Mode.EXISTING_DIR, default_path='', label_text='', dialog_label='', button_icon=None,
+                 filters=None, start_directory='', clear=False, parent=None):
+
+        self._mode = int(mode)
+        self._label_text = label_text
+        self._dialog_label = dialog_label
+        self._folder_icon = button_icon or resources.icon('open')
+        self._filters = filters
+        self._start_directory = start_directory
+        self._clear = clear
+
+        super(PathWidget, self).__init__(parent=parent)
+
+        with qt_contexts.block_signals(self):
+            self.directory = default_path
+
+    # =================================================================================================================
+    # PROPERTIES
+    # =================================================================================================================
+
+    @property
+    def line_edit(self):
+        return self._path_line
+
+    @property
+    def folder_button(self):
+        return self._path_button
+
+    @property
+    def start_directory(self):
+        return self._start_directory
+
+    @start_directory.setter
+    def start_directory(self, value):
+        self._start_directory = str(value)
+
+    # =================================================================================================================
+    # BASE
+    # =================================================================================================================
+
+    def add_widget(self, qwidget):
+        """
+        Adds a new widget to the path widget.
+
+        :param QWidget qwidget: QWidget to add
+        """
+
+        self.main_layout.addWidget(qwidget)
+
+    # =================================================================================================================
+    # OVERRIDES
+    # =================================================================================================================
+
+    @base.DirectoryWidget.directory.setter
+    def directory(self, value):
+        base.DirectoryWidget.directory.fset(self, value)
+        with qt_contexts.block_signals(self._path_line):
+            self._path_line.setText(self._directory)
+        self.directoryChanged.emit(self._directory)
+
+    def get_main_layout(self):
+        return layouts.VerticalLayout(spacing=2, margins=(2, 2, 2, 2))
+
+    def ui(self):
+        super(PathWidget, self).ui()
+
+        self._path_widget = base.BaseWidget(
+            layout=layouts.HorizontalLayout(spacing=2, margins=(2, 2, 2, 2)), parent=self)
+        self._path_label = labels.BaseLabel('' if not self._label_text else '{}'.format(self._label_text))
+        self._path_label.setVisible(bool(self._label_text))
+        self._path_line = lineedits.FolderLineEdit(parent=self)
+        if path.exists(self._directory):
+            self._path_line.setText(self._directory)
+        self._path_button = buttons.BaseButton(parent=self)
+        if self._folder_icon:
+            self._path_button.set_icon(self._folder_icon)
+        else:
+            self._path_button.setText('Browse...')
+        self._clear_button = buttons.BaseButton(parent=self)
+        self._clear_button.setIcon(resources.icon('close'))
+        self._clear_button.setVisible(self._clear)
+        self._path_widget.main_layout.addWidget(self._path_label)
+        self._path_widget.main_layout.addWidget(self._path_line)
+        self._path_widget.main_layout.addWidget(self._path_button)
+        self._path_widget.main_layout.addWidget(self._clear_button)
+
+        self.main_layout.addWidget(self._path_widget)
+
+    def setup_signals(self):
+        super(PathWidget, self).setup_signals()
+
+        self._path_line.textChanged.connect(self._on_path_directory_text_changed)
+        self._path_button.clicked.connect(self._on_path_button_clicked)
+        self._clear_button.clicked.connect(self._on_clear_button_clicked)
+
+    # =================================================================================================================
+    # BASE
+    # =================================================================================================================
+
+    def set_placeholder_text(self, text):
+        """
+        Sets line edit placeholder text.
+
+        :param str text: placeholder text.
+        """
+
+        self._path_line.setPlaceholderText(text)
+
+    # =================================================================================================================
+    # INTERNAL
+    # =================================================================================================================
+
+    def _get_existing_directory(self):
+        """
+        Internal function that opens a select folder dialog.
+
+        :return: selected existing directory.
+        :rtype: str or None
+        """
+
+        selected_path = qtutils.get_folder(directory=self._directory or self._start_directory, parent=self)
+        if not path.is_dir(selected_path):
+            return None
+
+        return selected_path
+
+    def _get_existing_file(self):
+        """
+        Internal function that opens a select folder dialog.
+
+        :return: selected existing directory.
+        :rtype: str or None
+        """
+
+        selected_path = qtutils.get_file(
+            directory=self._directory or self._start_directory, filters=self._filters, dialog_title=self._dialog_label,
+            parent=self)
+        if not path.is_file(selected_path):
+            return
+
+        return selected_path
+
+    def _get_save_file(self):
+        """
+        Internal function that opens a save file dialog.
+
+        :return: selected save directory.
+        :rtype: str or None
+        """
+
+        selected_path = qtutils.get_save_file(
+            directory=self._directory or self._start_directory, filters=self._filters, dialog_title=self._dialog_label,
+            parent=self)
+        if not path.is_file(selected_path):
+            return
+
+    def _set_error(self, flag):
+        """
+        Internal function that updates directory line color based on whether or not selected file/folder exists.
+
+        :param bool flag: True when file/folder does not exists; False otherwise.
+        """
+
+        yes_color = QColor(200, 255, 200, 100)
+        no_color = QColor(25, 200, 200, 100)
+
+        palette = QPalette()
+        if flag:
+            palette.setColor(QPalette().Base, no_color)
+        else:
+            palette.setColor(QPalette().Base, yes_color)
+
+        self._path_line.setPalette(palette)
+
+    # =================================================================================================================
+    # CALLBACKS
+    # =================================================================================================================
+
+    def _on_path_directory_text_changed(self, text):
+        """
+        Internal callback function that is called when directory value changes.
+
+        :param str text: new directory.
+        """
+
+        with qt_contexts.block_signals(self):
+            self.directory = text
+
+        self._set_error(not path.exists(text))
+        if not text:
+            self._path_line.setPalette(lineedits.BaseLineEdit().palette())
+
+        self.directoryChanged.emit(text)
+
+    def _on_path_button_clicked(self):
+        """
+        Internal callback function that is called when folder browse button is clicked by the user.
+        """
+
+        directory = None
+        if self._mode == 0:
+            directory = self._get_existing_directory()
+        elif self._mode == 1:
+            directory = self._get_existing_file()
+        elif self._mode == 2:
+            directory = self._get_save_file()
+        if not directory:
+            return None
+
+        directory = path.clean_path(directory)
+        self.directory = directory
+
+        return directory
+
+    def _on_clear_button_clicked(self):
+        """
+        Internal callback function that is called when clear button is clicked by the user.
+        """
+
+        self.directory = ''
+
+
 class SelectFile(base.DirectoryWidget, object):
     """
     Widget with button and line edit that opens a file dialog to select file paths
@@ -367,8 +663,8 @@ class SelectFile(base.DirectoryWidget, object):
     def ui(self):
         super(SelectFile, self).ui()
 
-        self._file_label = label.BaseLabel(
-            '{0}'.format(self._label_text)) if self._label_text == '' else label.BaseLabel(
+        self._file_label = labels.BaseLabel(
+            '{0}'.format(self._label_text)) if self._label_text == '' else labels.BaseLabel(
             '{0}:'.format(self._label_text), parent=self)
         if not self._label_text:
             self._file_label.setVisible(False)
@@ -449,7 +745,7 @@ class SelectFile(base.DirectoryWidget, object):
             file_line = os.path.dirname(file_line)
         result = dcc.select_file_dialog('Select File', start_directory=file_line, pattern=self._filters or '') or ''
         if not result or not os.path.isfile(result):
-            LOGGER.warning('Selected file "{}" is not a valid file!'.format(result))
+            logger.warning('Selected file "{}" is not a valid file!'.format(result))
             return
         else:
             filename = path.clean_path(result)
@@ -498,10 +794,10 @@ class GetDirectoryWidget(base.DirectoryWidget, object):
         self._directory_widget.setLayout(directory_layout)
         self.main_layout.addWidget(self._directory_widget)
 
-        self._directory_lbl = label.BaseLabel('directory', parent=self)
+        self._directory_lbl = labels.BaseLabel('directory', parent=self)
         self._directory_lbl.setMinimumWidth(60)
         self._directory_lbl.setMaximumWidth(100)
-        self._directory_edit = lineedit.BaseLineEdit(parent=self)
+        self._directory_edit = lineedits.BaseLineEdit(parent=self)
         self._directory_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self._directory_browse_btn = buttons.BaseButton('browse', parent=self)
 
@@ -559,7 +855,7 @@ class GetDirectoryWidget(base.DirectoryWidget, object):
             self.set_error(True)
 
         if not text:
-            self._directory_edit.setPalette(lineedit.BaseLineEdit().palette())
+            self._directory_edit.setPalette(lineedits.BaseLineEdit().palette())
 
         self.directoryChanged.emit(directory)
 

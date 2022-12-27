@@ -12,7 +12,20 @@ from Qt.QtWidgets import QFrame, QStackedWidget
 
 from tp.core.managers import resources
 from tp.common.qt import consts, qtutils, base, dpi, mixin
-from tp.common.qt.widgets import layouts, buttons, lineedit
+from tp.common.qt.widgets import layouts, buttons, lineedits
+
+
+def sliding_opacity_stacked_widget(parent=None):
+    """
+    Creates a new QStackWidget that uses opacity animation to switch between stack widgets.
+
+    :param QWidget parent: parent widget.
+    :return: stack widget.
+    :rtype: SlidingOpacityStackedWidget
+    """
+
+    new_stack_widget = SlidingOpacityStackedWidget(parent=parent)
+    return new_stack_widget
 
 
 class SlidingStackedWidget(QStackedWidget, object):

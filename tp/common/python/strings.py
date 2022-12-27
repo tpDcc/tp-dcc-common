@@ -522,10 +522,10 @@ def flatten_array_space(array):
     :return: str
     """
 
-    from tpDcc.libs.python import python
+    from tp.common.python import helpers
 
     out_array = ''
-    array = python.force_list(array)
+    array = helpers.force_list(array)
     for obj in array:
         if type(obj).__name__ != 'str':
             obj = obj.__str__()
@@ -544,7 +544,7 @@ def flatten_array(array):
     :return: str
     """
 
-    from tpDcc.libs.python import python
+    from tp.common.python import helpers
 
     out_array = ''
     array = python.force_list(array)
@@ -566,7 +566,7 @@ def flatten_array_colon(array):
     :return: str
     """
 
-    from tpDcc.libs.python import python
+    from tp.common.python import helpers
 
     out_array = ''
     array = python.force_list(array)
@@ -579,3 +579,23 @@ def flatten_array_colon(array):
             out_array = out_array + ':' + obj
 
     return out_array
+
+
+def append_extension(input_string, extension):
+    """
+    Adds the given extension at the end of the string if the input string does not already end with that extension
+
+    :param str input_string: string to append extension
+    :param str extension: extension to append into the input string.
+    :return: string with the extension appended.
+    :rtype: str
+    """
+
+    if not extension.startswith('.'):
+        extension = '.{}'.format(extension)
+    if input_string.endswith('.'):
+        input_string = input_string[:-1]
+    if not input_string.endswith(extension):
+        input_string = '{}{}'.format(input_string, extension)
+
+    return input_string

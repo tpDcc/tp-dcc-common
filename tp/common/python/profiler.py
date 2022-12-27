@@ -7,11 +7,24 @@ Utility methods related to profile Python code
 
 from __future__ import print_function, division, absolute_import
 
+import sys
 import time
 import pstats
+import timeit
 import cProfile as profile
 from functools import wraps
 from collections import defaultdict
+
+from tp.core import log
+
+logger = log.tpLogger
+
+if sys.version_info[0] > 3:
+    def _get_func_name(func):
+        return func.func_name
+else:
+    def _get_func_name(func):
+        return func.__name__
 
 
 def profile_function(sort_key='time', rows=30):
@@ -19,11 +32,23 @@ def profile_function(sort_key='time', rows=30):
         @wraps(_)
         def __(*fargs, **fkwargs):
             prof = profile.Profile()
-            ret = prof.runcall(f, *fargs, **fkwargs)
+            ret = prof.runcall(fn, *fargs, **fkwargs)
             pstats.Stats(prof).strip_dirs().sort_stats(sort_key).print_stats(rows)
             return ret
         return __
     return _
+
+
+def fn_timer(fn):
+    def function_timer(*args, **kwargs):
+        t0 = timeit.default_timer()
+        result = fn(*args, **kwargs)
+        t1 = timeit.default_timer()
+        logger.debug('Total time running {}: {} seconds'.format(
+            '.'.join((fn.__module__, _get_func_name(fn))), str(t1 - t0)))
+        return result
+
+    return function_timer
 
 
 class LapCounter(object):

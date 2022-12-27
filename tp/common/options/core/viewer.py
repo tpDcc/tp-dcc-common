@@ -287,7 +287,7 @@ class OptionsViewer(base.BaseWidget):
         if not widgets:
             return
 
-        widgets = self._options_list.sort_widgets(widgets, widgets[0].get_parent())
+        widgets = self._options_list.sort_widgets(widgets, widgets[0].parent())
         if not widgets:
             return
         for w in widgets:
@@ -303,7 +303,7 @@ class OptionsViewer(base.BaseWidget):
         if not widgets:
             return
 
-        widgets = self._options_list.sort_widgets(widgets, widgets[0].get_parent())
+        widgets = self._options_list.sort_widgets(widgets, widgets[0].parent())
         if not widgets:
             return
         for w in widgets:
@@ -319,7 +319,7 @@ class OptionsViewer(base.BaseWidget):
         if not widgets:
             return
 
-        widgets = self._options_list.sort_widgets(widgets, widgets[0].get_parent())
+        widgets = self._options_list.sort_widgets(widgets, widgets[0].parent())
         if not widgets:
             return
         for w in widgets:

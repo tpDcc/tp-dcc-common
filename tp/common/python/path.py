@@ -51,7 +51,7 @@ class FindUniquePath(name.FindUniqueString, object):
         return join_path(self.parent_path, name)
 
     def _get_parent_path(self, directory):
-        return get_dirname(directory)
+        return dirname(directory)
 
 
 @contextlib.contextmanager
@@ -146,24 +146,24 @@ def real_path(path):
     return normalize_path(path)
 
 
-def join_path(dir1, dir2):
+def join_path(*args):
     """
-    Appends dir2 to the end of dir1
-    :param dir1: str
-    :param dir2: str
-    :return: str, combined directory path
+    Appends given directories.
+
+    :return: combined directory path
+    :rtype: str
     """
 
-    if dir1 is None or dir2 is None:
+    if not args:
         return None
 
-    dir1 = clean_path(dir1)
-    dir2 = clean_path(dir2)
+    if len(args) == 1:
+        return args[0]
 
-    dir_path = '{}/{}'.format(dir1, dir2) if dir2 else dir1
-    dir_path = clean_path(dir_path)
+    paths_to_join = [clean_path(str(path)) for path in args]
+    joined_path = clean_path(os.sep.join(paths_to_join))
 
-    return dir_path
+    return joined_path
 
 
 def set_windows_slashes(directory):
@@ -222,6 +222,45 @@ def get_relative_path(path, start):
         path = path.replace(rpath, token)
 
     return path
+
+
+def relative_to(root, b):
+    """
+    Returns the relative path without '..'
+
+    :param str root: main root path
+    :param str b: child path which contains the root.
+    :return: relative path.
+    :rtype: str or None
+    """
+
+    def _iter_parents(path):
+        """
+        Internal generator function that iterates each parent folder.
+
+        :param str path: path to iterate.
+        :return: generator(str)
+        """
+
+        drive, p = os.path.splitdrive(path)
+        parent = os.path.dirname(p)
+        basename = os.path.basename(p)
+        fragments = [os.path.basename(parent), basename]
+        while parent not in (u"/", "", "\\"):
+            yield join_path(drive, parent), os.path.sep.join(fragments).replace("\\", "/")
+            parent = dirname(parent)
+            fragments.insert(0, get_basename(parent))
+
+    if dirname(b) == root:
+        return get_basename(b)
+
+    previous = ''
+    for absolute_parent, relative in _iter_parents(b):
+        if absolute_parent == root:
+            return previous
+        previous = relative
+
+    return None
 
 
 def get_absolute_path(path, start):
@@ -393,7 +432,7 @@ def get_basename(directory, with_extension=True):
         return False
 
 
-def get_dirname(directory):
+def dirname(directory):
     """
     Given a directory path, this will return the path above the last child path in the path
     For example, C:/test/rig.py will return C:/test
@@ -583,7 +622,7 @@ def rename(directory, name, make_unique=False):
     if base_name == name:
         return
 
-    parent_path = get_dirname(directory=directory)
+    parent_path = dirname(directory=directory)
     rename_path = join_path(parent_path, name)
 
     if make_unique:

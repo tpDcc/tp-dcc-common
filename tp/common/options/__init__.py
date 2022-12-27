@@ -34,28 +34,3 @@ class OptionsLib(library.DccLibrary, object):
         base_tool_config.update(tool_config)
 
         return base_tool_config
-
-
-def create_logger(dev=False):
-    """
-    Creates logger for current tpDcc-libs-datalibrary package
-    """
-
-    logger_directory = os.path.normpath(os.path.join(os.path.expanduser('~'), 'tpDcc', 'logs', 'libs'))
-    if not os.path.isdir(logger_directory):
-        os.makedirs(logger_directory)
-
-    logging_config = os.path.normpath(os.path.join(os.path.dirname(__file__), '__logging__.ini'))
-
-    logging.config.fileConfig(logging_config, disable_existing_loggers=False)
-    logger = logging.getLogger('tpDcc-libs-options')
-    dev = os.getenv('TPDCC_DEV', dev)
-    if dev:
-        logger.setLevel(logging.DEBUG)
-        for handler in logger.handlers:
-            handler.setLevel(logging.DEBUG)
-
-    return logger
-
-
-create_logger()

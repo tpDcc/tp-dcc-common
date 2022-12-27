@@ -411,7 +411,7 @@ class PopupMessage(base.BaseWidget, object):
 
     def _set_proper_position(self, parent):
         parent_parent = parent.parent()
-        dcc_win = dcc.get_main_window()
+        dcc_win = dcc.main_window()
         if dcc_win:
             dcc_window = parent_parent == dcc_win or parent_parent.objectName() == dcc_win.objectName()
         else:

@@ -14,7 +14,7 @@ from Qt.QtGui import QColor, QPalette
 from tp.core import log
 from tp.common.python import strings as string_utils
 from tp.common.qt import qtutils, base
-from tp.common.qt.widgets import layouts, lineedit, directory, color
+from tp.common.qt.widgets import layouts, lineedits, directory, color
 
 logger = log.tpLogger
 

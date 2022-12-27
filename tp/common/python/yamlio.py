@@ -29,10 +29,14 @@ def write_to_file(data, filename, **kwargs):
     #     filename += '.yml'
 
     indent = kwargs.pop('indent', 2)
+    safe = kwargs.pop('safe', False)
 
     try:
         with open(filename, 'w') as yaml_file:
-            yaml.safe_dump(data, yaml_file, indent=indent, **kwargs)
+            if safe:
+                yaml.safe_dump(data, yaml_file, indent=indent, **kwargs)
+            else:
+                yaml.dump(data, yaml_file, indent=indent, **kwargs)
     except IOError:
         logger.error('Data not saved to file {}'.format(filename))
         return None

@@ -165,14 +165,14 @@ class InputManager(object):
         return list()
 
     def __contains__(self, item):
-        return item.get_name() in self._actions
+        return item.name() in self._actions
 
     def get_data(self):
         return self._actions
 
     def register_action(self, action):
-        if action not in self._actions[action.get_name()]:
-            self._actions[action.get_name()].append(action)
+        if action not in self._actions[action.name()]:
+            self._actions[action.name()].append(action)
 
     def load_from_data(self, data):
         for action_name, action_variants in data.items():

@@ -8,9 +8,100 @@ Module that contains custom extra layout implementations
 from __future__ import print_function, division, absolute_import
 
 from Qt.QtCore import Qt, QPoint, QRect, QSize
-from Qt.QtWidgets import QLayout, QHBoxLayout, QVBoxLayout, QGridLayout, QFormLayout, QWidget, QWidgetItem
+from Qt.QtWidgets import QLayout, QBoxLayout, QHBoxLayout, QVBoxLayout, QGridLayout, QFormLayout, QWidget, QWidgetItem
 
-from tp.common.qt import consts, qtutils
+from tp.common.qt import consts, dpi
+
+
+DEFAULT_SPACING = -1
+
+
+def vertical_layout(spacing=DEFAULT_SPACING, margins=(0, 0, 0, 0), alignment=None):
+    """
+    Returns a new vertical layout that automatically handles DPI stuff.
+
+    :param int spacing: layout spacing
+    :param tuple(int, int, int, int) margins: layout margins.
+    :param Qt.Alignment or None alignment: optional layout alignment.
+
+    :return: VerticalLayout
+    """
+
+    new_layout = VerticalLayout(spacing=spacing, margins=margins)
+    if alignment is not None:
+        new_layout.setAlignment(alignment)
+
+    return new_layout
+
+
+def horizontal_layout(spacing=DEFAULT_SPACING, margins=(0, 0, 0, 0), alignment=None):
+    """
+    Returns a new horizontal layout that automatically handles DPI stuff.
+
+    :param int spacing: layout spacing
+    :param tuple(int, int, int, int) margins: layout margins.
+    :param Qt.Alignment or None alignment: optional layout alignment.
+
+    :return: VerticalLayout
+    """
+
+    new_layout = HorizontalLayout(spacing=spacing, margins=margins)
+    if alignment is not None:
+        new_layout.setAlignment(alignment)
+
+    return new_layout
+
+
+def grid_layout(spacing=DEFAULT_SPACING, margins=(0, 0, 0, 0)):
+    """
+    Returns a new grid layout that automatically handles DPI stuff.
+
+    :param int spacing: layout spacing
+    :param tuple(int, int, int, int) margins: layout margins.
+
+    :return: VerticalLayout
+    """
+
+    return GridLayout(spacing=spacing, margins=margins)
+
+
+def form_layout(spacing=DEFAULT_SPACING, margins=(0, 0, 0, 0)):
+    """
+    Returns a new form layout that automatically handles DPI stuff.
+
+    :param int spacing: layout spacing
+    :param tuple(int, int, int, int) margins: layout margins.
+
+    :return: FormLayout
+    """
+
+    return FormLayout(spacing=spacing, margins=margins)
+
+
+def box_layout(spacing=DEFAULT_SPACING, margins=(0, 0, 0, 0), orientation=Qt.Horizontal):
+    """
+    Returns a new form layout that automatically handles DPI stuff.
+
+    :param int spacing: layout spacing
+    :param tuple(int, int, int, int) margins: layout margins.
+    :param Qt.Orientation orientation: layout orientation.
+
+    :return: BoxLayout
+    """
+
+    return BoxLayout(orientation, spacing=spacing, margins=margins)
+
+
+def flow_layout(spacing=DEFAULT_SPACING, parent=None):
+    """
+    Returns a new flow layout.
+
+    :param int spacing: layout spacing.
+    :param QWidget parent: layout parent.
+    :return: FlowLayout
+    """
+
+    return FlowLayout(spacing_x=spacing, spacing_y=spacing, parent=parent)
 
 
 class HorizontalLayout(QHBoxLayout, object):
@@ -25,8 +116,8 @@ class HorizontalLayout(QHBoxLayout, object):
 
         super(HorizontalLayout, self).__init__(*args, **kwargs)
 
-        self.setContentsMargins(*qtutils.margins_dpi_scale(*margins))
-        self.setSpacing(qtutils.dpi_scale(spacing))
+        self.setContentsMargins(*dpi.margins_dpi_scale(*margins))
+        self.setSpacing(dpi.dpi_scale(spacing))
 
 
 class VerticalLayout(QVBoxLayout, object):
@@ -41,8 +132,8 @@ class VerticalLayout(QVBoxLayout, object):
 
         super(VerticalLayout, self).__init__(*args, **kwargs)
 
-        self.setContentsMargins(*qtutils.margins_dpi_scale(*margins))
-        self.setSpacing(qtutils.dpi_scale(spacing))
+        self.setContentsMargins(*dpi.margins_dpi_scale(*margins))
+        self.setSpacing(dpi.dpi_scale(spacing))
 
 
 class FormLayout(QFormLayout, object):
@@ -57,8 +148,8 @@ class FormLayout(QFormLayout, object):
 
         super(FormLayout, self).__init__(*args, **kwargs)
 
-        self.setContentsMargins(*qtutils.margins_dpi_scale(*margins))
-        self.setSpacing(qtutils.dpi_scale(spacing))
+        self.setContentsMargins(*dpi.margins_dpi_scale(*margins))
+        self.setSpacing(dpi.dpi_scale(spacing))
 
 
 class GridLayout(QGridLayout, object):
@@ -77,25 +168,25 @@ class GridLayout(QGridLayout, object):
 
         super(GridLayout, self).__init__(*args, **kwargs)
 
-        self.setContentsMargins(*qtutils.margins_dpi_scale(*margins))
+        self.setContentsMargins(*dpi.margins_dpi_scale(*margins))
 
         if not vertical_spacing and not horizontal_spacing:
-            self.setHorizontalSpacing(qtutils.dpi_scale(spacing))
-            self.setVerticalSpacing(qtutils.dpi_scale(spacing))
+            self.setHorizontalSpacing(dpi.dpi_scale(spacing))
+            self.setVerticalSpacing(dpi.dpi_scale(spacing))
         elif vertical_spacing and not horizontal_spacing:
-            self.setHorizontalSpacing(qtutils.dpi_scale(horizontal_spacing))
-            self.setVerticalSpacing(qtutils.dpi_scale(vertical_spacing))
+            self.setHorizontalSpacing(dpi.dpi_scale(horizontal_spacing))
+            self.setVerticalSpacing(dpi.dpi_scale(vertical_spacing))
         elif horizontal_spacing and not vertical_spacing:
-            self.setHorizontalSpacing(qtutils.dpi_scale(horizontal_spacing))
-            self.setVerticalSpacing(qtutils.dpi_scale(spacing))
+            self.setHorizontalSpacing(dpi.dpi_scale(horizontal_spacing))
+            self.setVerticalSpacing(dpi.dpi_scale(spacing))
         else:
-            self.setHorizontalSpacing(qtutils.dpi_scale(horizontal_spacing))
-            self.setVerticalSpacing(qtutils.dpi_scale(vertical_spacing))
+            self.setHorizontalSpacing(dpi.dpi_scale(horizontal_spacing))
+            self.setVerticalSpacing(dpi.dpi_scale(vertical_spacing))
 
         if column_min_width:
-            self.setColumnMinimumWidth(column_min_width[0], qtutils.dpi_scale(column_min_width[1]))
+            self.setColumnMinimumWidth(column_min_width[0], dpi.dpi_scale(column_min_width[1]))
         if column_min_width_b:
-            self.setColumnMinimumWidth(column_min_width_b[0], qtutils.dpi_scale(column_min_width_b[1]))
+            self.setColumnMinimumWidth(column_min_width_b[0], dpi.dpi_scale(column_min_width_b[1]))
 
 
 class FlowLayout(QLayout, object):
@@ -243,7 +334,7 @@ class FlowLayout(QLayout, object):
 
         remove = list()
         for item in self._item_list:
-            if not qtutils.is_valid_widget(item):
+            if not dpi.is_valid_widget(item):
                 remove.append(item)
 
         [self._item_list.remove(r) for r in remove]
@@ -255,7 +346,7 @@ class FlowLayout(QLayout, object):
         :param spacing: float
         """
 
-        self._spacing_x = qtutils.dpi_scale(spacing)
+        self._spacing_x = dpi.dpi_scale(spacing)
 
     def set_spacing_y(self, spacing):
         """
@@ -263,11 +354,11 @@ class FlowLayout(QLayout, object):
         :param spacing: float
         """
 
-        self._spacing_y = qtutils.dpi_scale(spacing)
+        self._spacing_y = dpi.dpi_scale(spacing)
 
     def clear(self):
         """
-        Clears all the widgest in the layout
+        Clears all the widgets in the layout
         """
 
         item = self.takeAt(0)
@@ -390,3 +481,21 @@ class FlowLayout(QLayout, object):
             return y + line_height - rect.y()
         else:
             return x + line_height - rect.x()
+
+
+class BoxLayout(QBoxLayout, object):
+    """
+    Custom QFormLayout implementation with support for 4k resolution
+    """
+
+    def __init__(self, *args, **kwargs):
+
+        orientation = kwargs.pop('orientation', Qt.Horizontal)
+        margins = kwargs.pop('margins', (0, 0, 0, 0))
+        spacing = kwargs.pop('spacing', DEFAULT_SPACING)
+
+        super(BoxLayout, self).__init__(
+            QBoxLayout.LeftToRight if orientation == 'horizontal' else QBoxLayout.TopToBottom, *args, **kwargs)
+
+        self.setContentsMargins(*dpi.margins_dpi_scale(*margins))
+        self.setSpacing(dpi.dpi_scale(spacing))

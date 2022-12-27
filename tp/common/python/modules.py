@@ -65,40 +65,57 @@ def convert_to_dotted_path(path):
     return '.'.join(reversed(package_path))
 
 
-def import_module(module_path, name=None, skip_warnings=False, skip_errors=False):
+def import_module(module_path, name=None, skip_warnings=True, skip_errors=False, force_reload=False):
     """
     Imports the given module path. If the given module path is a dotted one, import lib will be used. Otherwise, it's
     expected that given module path is the absolute path to the source file. If name argument is not given, then the
     basename without the extension will be used
-    :param module_path: str, module path. Can be a dotted path (tpDcc.libs.python.modules) or an absolute one
+    :param module_path: str, module path. Can be a dotted path (cpg.common.python.modules) or an absolute one
     :param name: str, name for the imported module which will be used if the module path is an absolute path
-    :param skip_warnings: bool, Whether or not warnings should be skipped
-    :param skip_errors: bool, Whether or not errors should be skipped
+    :param skip_warnings: bool, whether warnings should be skipped
+    :param skip_errors: bool, whether errors should be skipped
     :return: ModuleObject, imported module object
     """
 
-    if is_dotted_module_path(module_path) and not os.path.exists(module_path):
+    if is_dotted_module_path(module_path) and not path_utils.exists(module_path):
         try:
             return importlib.import_module(module_path)
-        except Exception:
-            if not skip_errors:
-                logger.error('Failed to load module: "{}"'.format(module_path), exc_info=True)
+        except (NameError, KeyError, AttributeError) as exc:
+            if '__init__' in str(exc) or '__path__' in str(exc):
+                pass
+            else:
+                msg = 'Failed to load module: "{}"'.format(module_path)
+                logger.error(msg, exc_info=True) if not skip_errors else logger.debug(
+                    '{} | {}'.format(msg, traceback.format_exc()))
+        except ImportError if helpers.is_python2() else (ImportError, ModuleNotFoundError):
+            msg = 'Failed to import module: "{}"'.format(module_path)
+            logger.error(msg, exc_info=True) if not skip_errors else logger.debug(
+                '{} | {}'.format(msg, traceback.format_exc()))
             return None
-
+        except SyntaxError:
+            msg = 'Module contains syntax errors: "{}"'.format(module_path)
+            logger.error(msg, exc_info=True) if not skip_errors else logger.debug(
+                '{} | {}'.format(msg, traceback.format_exc()))
+            return None
     try:
-        if os.path.exists(module_path):
+        if path_utils.exists(module_path):
             if not name:
-                name = os.path.splitext(os.path.basename(module_path))[0]
+                name = path_utils.get_basename(module_path, with_extension=False)
             if name in sys.modules:
-                return sys.modules[name]
+                if force_reload:
+                    pass
+                    # logger.info('Force module reloading: {}'.format(name))
+                    # sys.modules.pop(name)
+                else:
+                    return sys.modules[name]
         if not name:
             if not skip_warnings:
                 logger.warning(
                     'Impossible to load module because module path: {} was not found!'.format(module_path))
             return None
-        if os.path.isdir(module_path):
-            module_path = os.path.join(module_path, '__init__.py')
-            if not os.path.exists(module_path):
+        if path_utils.is_dir(module_path):
+            module_path = path_utils.join_path(module_path, '__init__.py')
+            if not path_utils.exists(module_path):
                 raise ValueError('Cannot find module path: "{}"'.format(module_path))
         if helpers.is_python3():
             return SourceFileLoader(name, os.path.realpath(module_path)).load_module()
@@ -247,5 +264,5 @@ def load_module_from_source(file_path, unique_namespace=False):
         else:
             return SourceFileLoader(module_name, file_path).load_module()
     except BaseException:
-        logger.debug('Failed trying to direct load : {} | {}'.format(file_path, traceback.format_exc()))
+        logger.info('Failed trying to direct load : {} | {}'.format(file_path, traceback.format_exc()))
         return None

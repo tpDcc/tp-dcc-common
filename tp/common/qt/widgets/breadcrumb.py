@@ -14,7 +14,7 @@ from Qt.QtWidgets import QSizePolicy, QButtonGroup, QFrame
 from tp.common.python import helpers, path
 from tp.common.resources import theme
 from tp.common.qt import mixin, base
-from tp.common.qt.widgets import layouts, buttons, label
+from tp.common.qt.widgets import layouts, buttons, labels
 
 
 class Breadcrumb(object):

@@ -377,11 +377,13 @@ def clean_file_string(string):
 
 def clean_name_string(string_value, clean_chars='_', remove_chars='_'):
     """
-    Clean given string by cleaning given clean_char and removing given remove_chars
-    :param string_value: str
-    :param clean_chars: str
-    :param remove_chars: str
-    :return: str, cleaned name
+    Clean given string by cleaning given clean_char and removing given remove_chars.
+
+    :param str string_value: str
+    :param str clean_chars: str
+    :param str remove_chars: str
+    :return: cleaned name
+    :rtype: str
     """
 
     string_value = re.sub('^[^A-Za-z0-9%s]+' % clean_chars, '', string_value)

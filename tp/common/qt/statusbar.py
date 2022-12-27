@@ -13,7 +13,7 @@ from Qt.QtGui import QPixmap
 
 from tp.core.managers import resources
 from tp.common.resources import theme
-from tp.common.qt.widgets import label
+from tp.common.qt.widgets import labels
 
 
 @theme.mixin

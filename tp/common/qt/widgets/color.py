@@ -23,7 +23,7 @@ from tp.core.managers import resources
 from tp.common.resources import color as core_color
 from tp.common.python import helpers
 from tp.common.qt import base, utils, qtutils, contexts as qt_contexts
-from tp.common.qt.widgets import layouts, buttons, label, spinbox, dividers, panel, sliders
+from tp.common.qt.widgets import layouts, buttons, labels, spinbox, dividers, panel, sliders
 
 
 # TODO: Move all defualt colors into a configuration file that can be ready by any widget

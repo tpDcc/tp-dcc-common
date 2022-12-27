@@ -7,16 +7,41 @@ Module that contains base functionality for Qt widgets
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtCore import Qt, Property, Signal, Property
-from Qt.QtWidgets import QApplication, QSizePolicy, QWidget, QFrame, QScrollArea, QWhatsThis
+from Qt import QtCore, QtWidgets, QtGui
 
 from tp.common.resources import theme
 from tp.common.qt import qtutils, contexts as qt_contexts
 from tp.common.qt.widgets import layouts
 
 
+def widget(layout=None, parent=None):
+    """
+    Creates a new base widget.
+    :param QLayout layout: main layout of the new widget.
+    :param QWidget parent: parent widget.
+    :return: newly created widget.
+    :rtype: BaseWidget
+    """
+
+    new_widget = BaseWidget(layout=layout, parent=parent)
+    return new_widget
+
+
+def frame(layout=None, parent=None):
+    """
+    Creates a new base frame.
+    :param QLayout layout: main layout of the new widget.
+    :param QWidget parent: parent widget.
+    :return: newly created widget.
+    :rtype: BaseFrame
+    """
+
+    new_frame = BaseFrame(layout=layout, parent=parent)
+    return new_frame
+
+
 @theme.mixin
-class BaseWidget(QWidget, object):
+class BaseWidget(QtWidgets.QWidget):
     """
     Base class for all QWidgets based items
     """
@@ -27,8 +52,9 @@ class BaseWidget(QWidget, object):
         super(BaseWidget, self).__init__(parent=parent)
 
         self._size = self.theme_default_size()
-
         self._use_scrollbar = kwargs.get('use_scrollbar', self.def_use_scrollbar)
+
+        self._setup_ui(layout=kwargs.get('layout', None))
 
         self.ui()
         self.setup_signals()
@@ -54,7 +80,7 @@ class BaseWidget(QWidget, object):
         self._size = value
         self.style().polish(self)
 
-    theme_size = Property(int, _get_size, _set_size)
+    theme_size = QtCore.Property(int, _get_size, _set_size)
 
     # =================================================================================================================
     # OVERRIDES
@@ -64,10 +90,10 @@ class BaseWidget(QWidget, object):
         return
 
     def mousePressEvent(self, event):
-        modifiers = QApplication.keyboardModifiers()
-        if modifiers == Qt.AltModifier:
+        modifiers = QtWidgets.QApplication.keyboardModifiers()
+        if modifiers == QtCore.Qt.AltModifier:
             pos = self.mapToGlobal((self.rect().topLeft()))
-            QWhatsThis.showText(pos, self.whatsThis())
+            QtWidgets.QWhatsThis.showText(pos, self.whatsThis())
         else:
             super(BaseWidget, self).mousePressEvent(event)
 
@@ -90,23 +116,7 @@ class BaseWidget(QWidget, object):
         Override it on new widgets (but always call super)
         """
 
-        self.main_layout = self.get_main_layout()
-        if self._use_scrollbar:
-            layout = layouts.VerticalLayout(spacing=0, margins=(0, 0, 0, 0))
-            self.setLayout(layout)
-            central_widget = QWidget()
-            central_widget.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
-            scroll = QScrollArea()
-            scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            scroll.setWidgetResizable(True)
-            scroll.setFocusPolicy(Qt.NoFocus)
-            layout.addWidget(scroll)
-            scroll.setWidget(central_widget)
-            central_widget.setLayout(self.main_layout)
-            self.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
-        else:
-            self.setLayout(self.main_layout)
+        pass
 
     def setup_signals(self):
         """
@@ -173,13 +183,45 @@ class BaseWidget(QWidget, object):
 
         return self
 
+    # =================================================================================================================
+    # INTERNAL
+    # =================================================================================================================
+
+    def _setup_ui(self, layout=None):
+        """
+        Internal function that setup basic widget UI
+
+        :param QLayout or None layout: layout to be used by the widget
+        :return:
+        """
+
+        self.main_layout = layout or self.get_main_layout()
+        if self._use_scrollbar:
+            layout = layouts.VerticalLayout(spacing=0, margins=(0, 0, 0, 0))
+            self.setLayout(layout)
+            central_widget = QtWidgets.QWidget()
+            central_widget.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
+            scroll = QtWidgets.QScrollArea()
+            scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+            scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+            scroll.setWidgetResizable(True)
+            scroll.setFocusPolicy(QtCore.Qt.NoFocus)
+            layout.addWidget(scroll)
+            scroll.setWidget(central_widget)
+            central_widget.setLayout(self.main_layout)
+            self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
+        else:
+            self.setLayout(self.main_layout)
+
 
 @theme.mixin
-class BaseFrame(QFrame, object):
-    mouseReleased = Signal(object)
+class BaseFrame(QtWidgets.QFrame):
+    mouseReleased = QtCore.Signal(object)
 
     def __init__(self, *args, **kwargs):
         super(BaseFrame, self).__init__(*args, **kwargs)
+
+        self._setup_ui(layout=kwargs.get('layout', None))
 
         self.ui()
         self.setup_signals()
@@ -203,14 +245,28 @@ class BaseFrame(QFrame, object):
         Override it on new widgets (but always call super)
         """
 
-        self.main_layout = self.get_main_layout()
-        self.setLayout(self.main_layout)
+        pass
 
     def setup_signals(self):
         pass
 
+    # =================================================================================================================
+    # INTERNAL
+    # =================================================================================================================
 
-class ContainerWidget(QWidget, object):
+    def _setup_ui(self, layout=None):
+        """
+        Internal function that setup basic widget UI
+
+        :param QLayout or None layout: layout to be used by the widget
+        :return:
+        """
+
+        self.main_layout = layout or self.get_main_layout()
+        self.setLayout(self.main_layout)
+
+
+class ContainerWidget(QtWidgets.QWidget):
     """
     Basic widget used a
     """
@@ -246,39 +302,32 @@ class ContainerWidget(QWidget, object):
         return cloned
 
 
-class DirectoryWidget(BaseWidget, object):
+class DirectoryWidget(BaseWidget):
     """
     Widget that contains variables to store current working directory
     """
 
+    directoryChanged = QtCore.Signal(str)
+
     def __init__(self, parent=None, **kwargs):
+
         self._directory = None
         self._last_directory = None
+
         super(DirectoryWidget, self).__init__(parent=parent, **kwargs)
 
-    def _get_directory(self):
+    @property
+    def directory(self):
         return self._directory
 
-    def _set_directory(self, directory):
-        with qt_contexts.block_signals(self):
-            self.set_directory(directory)
-
-    directory = Property(str, _get_directory, _set_directory)
-
-    def get_directory(self):
-        return self._directory
-
-    def set_directory(self, directory):
-        """
-        Set the directory used by this widget
-        :param directory: str, new directory of the widget
-        """
-
+    @directory.setter
+    def directory(self, value):
         self._last_directory = self._directory
-        self._directory = directory
+        self._directory = value
+        self.directoryChanged.emit(self._directory)
 
 
-class PlaceholderWidget(QWidget, object):
+class PlaceholderWidget(QtWidgets.QWidget):
     """
     Basic widget that loads custom UI
     """
@@ -286,3 +335,36 @@ class PlaceholderWidget(QWidget, object):
     def __init__(self, *args):
         super(PlaceholderWidget, self).__init__(*args)
         qtutils.load_widget_ui(self)
+
+
+class ScrollWidget(BaseWidget):
+    def __init__(self, border=0, parent=None):
+        super(ScrollWidget, self).__init__(parent=parent)
+
+        self.setLayout(layouts.VerticalLayout())
+
+        self._content = QtWidgets.QWidget(parent=self)
+        self._content_layout = layouts.VerticalLayout(margins=(0, 0, 0, 0))
+        self._content.setLayout(self._content_layout)
+
+        self._scroll_area = QtWidgets.QScrollArea()
+        self._scroll_area.setWidgetResizable(True)
+        self._scroll_area.setWidget(self._content)
+
+        self.layout().addWidget(self._scroll_area)
+
+        if not border:
+            self._scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+
+    @property
+    def content_layout(self) -> layouts.VerticalLayout:
+        return self._content_layout
+
+    def resizeEvent(self, event:QtGui.QResizeEvent):
+        self._scroll_area.resizeEvent(event)
+
+    def add_widget(self, widget_to_add: QtWidgets.QWidget):
+        self._content_layout.addWidget(widget_to_add)
+
+    def add_layout(self, layout_to_add: QtWidgets.QLayout):
+        self._content_layout.addLayout(layout_to_add)

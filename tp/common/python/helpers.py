@@ -83,9 +83,6 @@ class ObjectDict(dict):
     Wrapper of a standard Python dict that operates like an object
     """
 
-    def __init__(self, **kwargs):
-        super(ObjectDict, self).__init__(**kwargs)
-
     def __getattr__(self, item):
         try:
             return self[item]
@@ -357,9 +354,11 @@ def string_to_list(str_):
 
 def force_list(var):
     """
-    Returns the given variable as list
+    Returns the given variable as list.
+
     :param var: variant
-    :return: list
+    :return: variable as a list.
+    :rtype: list
     """
 
     if var is None:
@@ -376,9 +375,11 @@ def force_list(var):
 
 def force_tuple(var):
     """
-    Returns the given variable as tuple
+    Returns the given variable as tuple.
+
     :param var: variant
-    :return: list
+    :return: variable as a tuple.
+    :rtype: tuple
     """
 
     if var is None:
@@ -392,10 +393,12 @@ def force_tuple(var):
 
 def force_sequence(var, sequence_type=list):
     """
-    Returns the given variable as sequence
+    Returns the given variable as sequence.
+
     If the given variable is list or tuple and sequence_type is different, a conversion will be forced
     :param var: variant
-    :return: sequence (tuple || list)
+    :return: sequence.
+    :rtype: tuple or list
     """
 
     if type is not list or not tuple:
@@ -410,6 +413,90 @@ def force_sequence(var, sequence_type=list):
         return sequence_type(var)
 
     return var
+
+
+def index_in_list(list_arg, index, default=None):
+    """
+    Returns the item at given index. If item does not exist, returns default value.
+
+    :param list(any) list_arg: list of objects to get from.
+    :param int index: index to get object at.
+    :param any default: any value to return as default.
+    :return: any
+    """
+
+    return list_arg[index] if list_arg and len(list_arg) > abs(index) else default
+
+
+def first_in_list(list_arg, default=None):
+    """
+    Returns the first element of the list. If list is empty, returns default value.
+
+    :param list(any) list_arg: An empty or not empty list.
+    :param any default: If list is empty, something to return.
+    :return: Returns the first element of the list.  If list is empty, returns default value.
+    :rtype: any
+    """
+
+    return index_in_list(list_arg, 0, default=default)
+
+
+def last_in_list(list_arg, default=None):
+    """
+    Returns the last element of the list. If list is empty, returns default value.
+
+    :param list(any) list_arg: An empty or not empty list.
+    :param any default: If list is empty, something to return.
+    :return: Returns the last element of the list.  If list is empty, returns default value.
+    :rtype: any
+    """
+
+    return index_in_list(list_arg, -1, default=default)
+
+
+def flatten_list(list_arg):
+    """
+    Returns a flattened list that has nested lists.
+
+    :param list(Any) list_arg: A list with nested lists.
+    :return: Returns a flattened list that has nested lists.
+    :rtype: List(Any)
+    """
+
+    result = lambda *n: (e for a in n for e in (result(*a) if isinstance(a, (tuple, list)) else (a,)))
+    return list(result(list_arg))
+
+
+def set_list_value_at(initial_list, index, value, buffer_value=None):
+    """
+    Sets a value into a list at an arbitrary index, buffering the list size until it meets that length.
+    If the index value is negative it will buffer the start of the list until it could set a value at that index.
+
+    :param list initial_list: The list to set the value into.
+    :param int index: The index at which to set that value.
+    :param any value: The value to set into the list at that index
+    :param any buffer_value: The value which should be used to buffer the list entries if it is not long enough.
+    :return: The modified list.
+    :raises IndexList: if given index is not an integer.
+    :rtype: list
+    """
+
+    if not isinstance(index, int):
+        raise IndexError('Index must be an int')
+
+    if index < 0:
+        buffer_length = abs(index)
+        index = 0
+        buffer_list = [buffer_value for x in range(buffer_length)]
+        initial_list = buffer_list + initial_list
+    elif len(initial_list) <= index:
+        buffer_length = index + 1 - len(initial_list)
+        buffer_list = [buffer_value for x in range(buffer_length)]
+        initial_list = initial_list + buffer_list
+
+    initial_list[index] = value
+
+    return initial_list
 
 
 def rotate_sequence(seq, current):
@@ -753,7 +840,7 @@ def delete_pyc_file(python_script):
     compile_script = python_script + 'c'
     if path.is_file(compile_script):
         compile_name = path.get_basename(compile_script)
-        compile_dir_name = path.get_dirname(compile_script)
+        compile_dir_name = path.dirname(compile_script)
         if not compile_name.endswith('.pyc'):
             return
 
@@ -973,6 +1060,35 @@ def is_iterable(obj):
     return True
 
 
+def chunk(iterable, size, overlap=0):
+    """
+    Yield successive sized chunks from the given iterable.
+
+    :param list or tuple iterable: iterable to chunk.
+    :param int size: chunk size.
+    :param bool overlap: overlap size.
+    :return: generator(any)
+    """
+
+    for i in range(0, len(iterable) - overlap, size - overlap):
+        yield iterable[i:i + size]
+
+
+def uniqify(list_to_make_unqiue):
+    """
+    Makes list unique, and preserves it order.
+
+    :param list list_to_make_unqiue: list to unique
+    :return: unique list.
+    :rtype: list
+    """
+
+    if is_python2():
+        return list(OrderedDict.fromkeys(list_to_make_unqiue))
+
+    return list(dict.fromkeys(list_to_make_unqiue))
+
+
 def group_consecutive_items(list_of_items):
     """
     From a list of non grouped consecutive items, returns a list of grouped consecutive frames
@@ -1105,7 +1221,7 @@ def compare_and_update_dicts(source_dict, target_dict):
     return target_dict, msg_log
 
 
-def get_duplicates_in_list(seq):
+def duplicates_in_list(seq):
     """
     Returns all duplicates items in given list or tuple
     :param seq: list or tuple
@@ -1141,3 +1257,59 @@ def index_exists_in_list(items_list, index):
     """
 
     return (0 <= index < len(items_list)) or (-len(items_list) <= index < 0)
+
+
+def update_dictionaries(source, target):
+    """
+    Compares recursively the two given dictionary keys and values. target will get all the new changes from source.
+
+    :param dict source: source dictionary with the original data.
+    :param dict target: target dictionary that will get the new changes from source.
+    :return: tuple with the new target dictionary and  a message log with all the changes that have occurred.
+    :rtype: tuple(dict, str)
+    """
+
+    message_log = ''
+
+    for key, value in source.items():
+        existing = target.get(key, None)
+        if existing is None:
+            message_log += 'New key found while comparing dictionary. Copying over ["{}": "{}"]\n'.format(key, value)
+            target[key] = value
+            existing = value
+        if isinstance(value, dict):
+            t, m = update_dictionaries(value, existing)
+            message_log += m
+
+    return target, message_log
+
+
+def merge_dictionaries(target, source, path=None, update=False):
+    """
+    Merges given dictionaries.
+
+    :param dict target:  source dictionary.
+    :param dict source: target dictionary.
+    :param str path:
+    """
+
+    path = force_list(path)
+    for key in source:
+        if key not in target:
+            target[key] = source[key]
+            continue
+        base_key = target[key]
+        merge_key = source[key]
+        if isinstance(base_key, dict) and isinstance(merge_key, dict):
+            merge_dictionaries(base_key, merge_key, path + [str(key)], update=update)
+        elif base_key == merge_key:
+            pass
+        elif isinstance(base_key, list) and isinstance(merge_key, list):
+            base_key += [i for i in merge_key if i not in base_key]
+        else:
+            if update:
+                target[key] = source[key]
+            else:
+                raise Exception('Conflict at {}'.format('.'.join(path + [str(key)])))
+
+    return target
